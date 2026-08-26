@@ -1,0 +1,110 @@
+.room-list-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.list-title {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--color-primary);
+  text-shadow: var(--neon-glow);
+  margin: 0;
+}
+
+.list-card {
+  background: rgba(10, 10, 20, 0.8);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+
+.room-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.room-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.room-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.room-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.room-id {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.room-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-right: 2rem;
+}
+
+.player-count {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.waiting {
+  background: rgba(57, 255, 20, 0.15);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.status-badge.playing {
+  background: rgba(255, 0, 60, 0.15);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.join-btn {
+  min-width: 120px;
+  font-family: 'Orbitron', sans-serif;
+}

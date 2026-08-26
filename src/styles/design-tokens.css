@@ -1,0 +1,40 @@
+:root {
+  /* Color Palette - Traditional Vietnamese Folk Style */
+  --color-primary: #8C2121; /* Red (Lễ hội/Tết) */
+  --color-primary-hover: #A62A2A;
+  --color-secondary: #D4A35C; /* Yellow/Gold (Vàng rơm/Giấy điệp) */
+  --color-accent: #2E5C31; /* Green (Lá tre/Bánh chưng) */
+  --color-success: #2E5C31;
+  --color-danger: #8C2121;
+
+  /* Backgrounds */
+  --bg-main: #F4E8D1; /* Giấy dó / Nền mộc mạc */
+  --bg-card: rgba(244, 232, 209, 0.95); /* Thẻ màu gỗ/giấy sáng */
+  --bg-card-hover: #FFF3DD;
+  
+  /* Text */
+  --text-primary: #3E2723; /* Nâu đất (Màu mực đen/nâu) */
+  --text-secondary: #5D4037; 
+  --text-muted: #8D6E63; 
+  --text-inverse: #F4E8D1; /* Text trên nền tối (như nút đỏ) */
+
+  /* Shadows (Classic drop shadows instead of neon glow) */
+  --glass-border: #D7CCC8;
+  --glass-shadow: 4px 4px 10px rgba(62, 39, 35, 0.15), -2px -2px 5px rgba(255, 255, 255, 0.5);
+  --glass-blur: blur(0px); /* Bỏ blur đi cho giống thật hơn */
+
+  /* Borders & Radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Typography */
+  /* Sử dụng font có chân (Serif) mộc mạc hoặc thư pháp nếu có */
+  --font-sans: 'Playfair Display', 'Merriweather', serif;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.3s ease-in-out;
+  --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}

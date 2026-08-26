@@ -1,0 +1,19 @@
+.bingo-board {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-secondary); /* Màu giấy điệp vàng rơm làm nền bảng */
+  padding: 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 4px solid var(--text-primary);
+  box-shadow: 8px 8px 0px rgba(62, 39, 35, 0.2);
+}
+
+@media (max-width: 600px) {
+  .bingo-board {
+    padding: 1rem;
+    gap: 0.25rem;
+  }
+}

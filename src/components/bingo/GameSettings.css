@@ -1,0 +1,72 @@
+.game-settings-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  animation: slideIn 0.4s ease-out;
+}
+
+.settings-card {
+  border: 4px solid var(--color-primary);
+  border-radius: 0;
+  box-shadow: 8px 8px 0px rgba(140, 33, 33, 0.2);
+}
+
+.settings-card .card-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--color-primary);
+  background: none;
+  -webkit-text-fill-color: initial;
+  text-shadow: none;
+  border-bottom: 2px solid var(--color-secondary);
+  padding-bottom: 1rem;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+/* Override Input UI inside settings to look more traditional */
+.settings-form .glass-input {
+  border: 2px solid var(--text-muted);
+  border-radius: 0;
+  background: #fff;
+  color: var(--text-primary);
+  font-family: 'Lora', serif;
+}
+
+.settings-form .glass-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+
+.settings-form .input-label {
+  font-family: 'Playfair Display', serif;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.start-btn {
+  margin-top: 1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  background: var(--color-primary);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(62, 39, 35, 0.5);
+}
+
+.start-btn:hover {
+  background: var(--color-primary-hover);
+}
+
+.start-btn:active {
+  box-shadow: 1px 1px 0 rgba(62, 39, 35, 0.5);
+  transform: translate(2px, 2px);
+}

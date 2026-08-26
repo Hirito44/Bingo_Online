@@ -1,0 +1,114 @@
+.bingo-cell {
+  background: #fff;
+  border: 2px solid var(--text-primary);
+  border-radius: 0;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+}
+
+.bingo-cell:hover:not(.selected) {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+}
+
+.bingo-cell.selected {
+  background: var(--color-primary);
+  border-color: var(--text-primary);
+  color: #fff;
+  transform: scale(0.95);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.cell-value {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.2rem, 3vw, 2.5rem);
+  font-weight: 900;
+  z-index: 2;
+}
+
+.cell-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.1) 120%);
+  z-index: 1;
+}
+
+/* Các nét gạch chiến thắng */
+.strike-line {
+  position: absolute;
+  background-color: var(--color-secondary); /* Nét gạch màu vàng rơm */
+  z-index: 3;
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  /* Animation vẽ ra */
+  animation: drawLine 0.4s ease-out forwards;
+}
+
+.strike-row {
+  height: 6px;
+  width: 0%;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.strike-col {
+  width: 6px;
+  height: 0%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.strike-diag1 {
+  height: 6px;
+  width: 0%;
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.strike-diag2 {
+  height: 6px;
+  width: 0%;
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+@keyframes drawLine {
+  to {
+    width: 140%; /* Cho 140% để nét gạch dài ra tận mép ô (đặc biệt là chéo) */
+    height: 140%; /* Chỉ áp dụng khi là cột dọc thì cần overwrite, ta sẽ xử lý riêng bên dưới */
+  }
+}
+
+.strike-row, .strike-diag1, .strike-diag2 {
+  animation: drawLineWidth 0.4s ease-out forwards;
+}
+.strike-col {
+  animation: drawLineHeight 0.4s ease-out forwards;
+}
+
+@keyframes drawLineWidth {
+  from { width: 0%; }
+  to { width: 140%; }
+}
+
+@keyframes drawLineHeight {
+  from { height: 0%; }
+  to { height: 140%; }
+}
