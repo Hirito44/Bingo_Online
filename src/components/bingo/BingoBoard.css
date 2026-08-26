@@ -17,3 +17,104 @@
     gap: 0.25rem;
   }
 }
+
+/* =========================================
+   THEME: OCEAN (Biển Cả / Glassmorphism)
+   ========================================= */
+.bingo-board.theme-ocean {
+  background: rgba(14, 165, 233, 0.25);
+  border-color: #0ea5e9;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+}
+
+.bingo-board.theme-ocean .bingo-cell {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: #0c4a6e;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bingo-board.theme-ocean .bingo-cell:hover:not(.selected) {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.bingo-board.theme-ocean .bingo-cell.selected {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #0284c7;
+  text-shadow: 0 0 5px rgba(255,255,255,0.5);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.bingo-board.theme-ocean .bingo-cell.suggested {
+  border-color: #0ea5e9;
+  box-shadow: inset 0 0 15px rgba(14, 165, 233, 0.6), 0 0 10px rgba(14, 165, 233, 0.6);
+  animation: blinkOcean 1s infinite alternate;
+}
+
+@keyframes blinkOcean {
+  0% { background: rgba(255, 255, 255, 0.4); transform: scale(1); }
+  100% { background: rgba(186, 230, 253, 0.8); transform: scale(1.08); }
+}
+
+.bingo-board.theme-ocean .strike-line {
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px #0284c7;
+}
+
+/* =========================================
+   THEME: TET (Lễ Hội / Đỏ Vàng)
+   ========================================= */
+.bingo-board.theme-tet {
+  background: #dc2626;
+  border-color: #fbbf24;
+  border-width: 6px;
+  box-shadow: 0 0 0 4px #dc2626, 8px 8px 0px rgba(153, 27, 27, 0.5);
+  background-image: radial-gradient(#b91c1c 3px, transparent 3px);
+  background-size: 20px 20px;
+  border-radius: 0;
+}
+
+.bingo-board.theme-tet .bingo-cell {
+  background: #fef08a;
+  border-color: #d97706;
+  border-width: 2px;
+  color: #991b1b;
+  border-radius: 50%; /* Tròn như quân cờ */
+  box-shadow: 3px 3px 0 #b45309;
+}
+
+.bingo-board.theme-tet .bingo-cell:hover:not(.selected) {
+  background: #fde047;
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 #b45309;
+}
+
+.bingo-board.theme-tet .bingo-cell.selected {
+  background: #991b1b;
+  color: #fef08a;
+  border-color: #7f1d1d;
+  box-shadow: inset 3px 3px 5px rgba(0,0,0,0.4);
+  transform: scale(0.95);
+}
+
+.bingo-board.theme-tet .bingo-cell.suggested {
+  border-color: #f59e0b;
+  box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.8), 0 0 10px rgba(245, 158, 11, 0.8);
+  animation: blinkTet 0.8s infinite alternate;
+}
+
+@keyframes blinkTet {
+  0% { background: #fef08a; transform: scale(1); }
+  100% { background: #fcd34d; transform: scale(1.12); box-shadow: 0 0 20px #f59e0b; }
+}
+
+.bingo-board.theme-tet .strike-line {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #991b1b;
+}

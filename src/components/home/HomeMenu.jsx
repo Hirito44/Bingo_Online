@@ -13,12 +13,7 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerNa
       setAlertMsg("Vui lòng nhập Mã Phòng!");
       return;
     }
-    const validRooms = ['RM1', 'RM2', 'RM3'];
-    if (validRooms.includes(roomId.trim().toUpperCase())) {
-      onJoinRoomById(roomId.trim().toUpperCase());
-    } else {
-      setAlertMsg("Mã phòng không tồn tại hoặc phòng đã đóng!");
-    }
+    onJoinRoomById(roomId.trim().toUpperCase());
   };
 
   return (

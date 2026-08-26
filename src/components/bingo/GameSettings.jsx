@@ -17,7 +17,7 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
     }
     if (size >= 3 && size <= 10 && requiredLines > 0) {
       // Truyền thêm roomName
-      onStartGame(roomName.trim(), Number(size), Number(size), Number(requiredLines));
+      onStartGame(roomName.trim(), Number(size), Number(size), Number(requiredLines), 'classic');
     } else {
       setAlertMsg("Vui lòng nhập cấu hình hợp lệ (Kích thước 3-10)!");
     }
