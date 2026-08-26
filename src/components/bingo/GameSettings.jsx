@@ -4,17 +4,22 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import './GameSettings.css';
 
-export const GameSettings = ({ onStartGame, onBack }) => {
-  const [rows, setRows] = useState(5);
-  const [cols, setCols] = useState(5);
+export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) => {
+  const [roomName, setRoomName] = useState(`Phòng của ${playerName || 'Người Lạ'}`);
+  const [size, setSize] = useState(5);
   const [requiredLines, setRequiredLines] = useState(1);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (rows > 0 && cols > 0 && rows <= 10 && cols <= 10 && requiredLines > 0) {
-      onStartGame(Number(rows), Number(cols), Number(requiredLines));
+    if (!roomName.trim()) {
+      setAlertMsg("Vui lòng nhập Tên Bàn Chơi!");
+      return;
+    }
+    if (size >= 3 && size <= 10 && requiredLines > 0) {
+      // Truyền thêm roomName
+      onStartGame(roomName.trim(), Number(size), Number(size), Number(requiredLines));
     } else {
-      alert("Vui lòng nhập cấu hình hợp lệ!");
+      setAlertMsg("Vui lòng nhập cấu hình hợp lệ (Kích thước 3-10)!");
     }
   };
 
@@ -23,34 +28,38 @@ export const GameSettings = ({ onStartGame, onBack }) => {
       <div className="header-bar">
         <Button variant="secondary" onClick={onBack}>⬅ QUAY LẠI</Button>
       </div>
-      <Card title="CẤU HÌNH PHÒNG GAME" className="max-w-md mx-auto settings-card">
+      <Card title="CẤU HÌNH BÀN CHƠI" className="max-w-md mx-auto settings-card">
         <form onSubmit={handleSubmit} className="settings-form">
-          <div className="input-row">
-            <Input 
-              label="SỐ HÀNG (ROWS)" 
-              type="number" 
-              min="2" max="10" 
-              value={rows} 
-              onChange={(e) => setRows(e.target.value)} 
-            />
-            <Input 
-              label="SỐ CỘT (COLS)" 
-              type="number" 
-              min="2" max="10" 
-              value={cols} 
-              onChange={(e) => setCols(e.target.value)} 
-            />
-          </div>
+          
           <Input 
-            label="SỐ ĐƯỜNG BINGO ĐỂ THẮNG (LINES)" 
+            label="TÊN BÀN CHƠI" 
+            type="text" 
+            placeholder="VD: Hội Lô Tô Xóm Chùa"
+            value={roomName} 
+            onChange={(e) => setRoomName(e.target.value)} 
+            className="glass-input"
+          />
+
+          <Input 
+            label={`KÍCH THƯỚC BẢNG (${size}x${size})`} 
             type="number" 
-            min="1" max={Math.max(rows, cols) + 2} 
+            min="3" max="10" 
+            value={size} 
+            onChange={(e) => setSize(e.target.value)} 
+            className="glass-input"
+          />
+          
+          <Input 
+            label="SỐ XIÊN ĐỂ THẮNG" 
+            type="number" 
+            min="1" max={Number(size) + 2} 
             value={requiredLines} 
             onChange={(e) => setRequiredLines(e.target.value)} 
-            style={{ borderColor: 'var(--color-secondary)' }}
+            className="glass-input"
           />
+          
           <Button type="submit" variant="primary" className="start-btn">
-            TẠO PHÒNG & BẮT ĐẦU
+            TẠO PHÒNG
           </Button>
         </form>
       </Card>

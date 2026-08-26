@@ -1,23 +1,42 @@
 /**
- * Sinh ra một mảng các ô số ngẫu nhiên cho bảng Bingo
- * @param {number} rows - Số hàng
- * @param {number} cols - Số cột
- * @returns {Array} Mảng các object { id, value, selected }
+ * Tạo một tập số chung (Shared Pool) ngẫu nhiên cho toàn bộ phòng.
+ * @param {number} totalCells Số lượng ô cần thiết (vd: 25 cho bảng 5x5)
+ * @returns {number[]} Mảng chứa các số ngẫu nhiên duy nhất
  */
-export const generateBingoBoard = (rows, cols) => {
+export const generateSharedPool = (totalCells) => {
+  const pool = new Set();
+  while (pool.size < totalCells) {
+    pool.add(Math.floor(Math.random() * 99) + 1);
+  }
+  return Array.from(pool);
+};
+
+/**
+ * Tạo ra một mảng 1D chứa các ô của bảng Bingo, sử dụng tập số chung (Shared Pool).
+ * Mỗi người chơi sẽ xáo trộn tập số này để tạo ra bảng có cấu trúc khác nhau nhưng chung bộ số.
+ * @param {number} rows Số hàng
+ * @param {number} cols Số cột
+ * @param {number[]} sharedPool Tập số chung của phòng
+ * @returns {Array} Mảng các object chứa id, value, selected
+ */
+export const generateBingoBoard = (rows, cols, sharedPool = []) => {
   const totalCells = rows * cols;
-  // Giới hạn số tối đa để bốc (gấp 3 lần tổng số ô để có tính ngẫu nhiên cao)
-  const maxNumber = totalCells * 3;
   
-  const numbers = new Set();
-  while (numbers.size < totalCells) {
-    const randomNum = Math.floor(Math.random() * maxNumber) + 1;
-    numbers.add(randomNum);
+  // Tạo bộ số (nếu chưa có pool thì tự tạo, nếu có thì copy)
+  let numbers = [];
+  if (sharedPool && sharedPool.length === totalCells) {
+    numbers = [...sharedPool];
+  } else {
+    numbers = generateSharedPool(totalCells);
   }
 
-  const shuffledNumbers = Array.from(numbers).sort(() => Math.random() - 0.5);
+  // Thuật toán xáo trộn Fisher-Yates
+  for (let i = numbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
 
-  return shuffledNumbers.map((num, index) => ({
+  return numbers.map((num, index) => ({
     id: index,
     value: num,
     selected: false,

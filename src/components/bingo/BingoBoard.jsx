@@ -2,7 +2,7 @@ import React from 'react';
 import { BingoCell } from './BingoCell';
 import './BingoBoard.css';
 
-export const BingoBoard = ({ board, rows, cols, onCellSelect, winningLines = [] }) => {
+export const BingoBoard = ({ board, rows, cols, onCellSelect, winningLines = [], latestCalledNumber }) => {
   
   // Helper to determine which strike types apply to a given cell id
   const getStrikeTypes = (cellId) => {
@@ -23,14 +23,20 @@ export const BingoBoard = ({ board, rows, cols, onCellSelect, winningLines = [] 
         gridTemplateRows: `repeat(${rows}, 1fr)`
       }}
     >
-      {board.map((cell) => (
-        <BingoCell 
-          key={cell.id} 
-          cell={cell} 
-          onSelect={onCellSelect} 
-          strikeTypes={getStrikeTypes(cell.id)}
-        />
-      ))}
+      {board.map((cell) => {
+        const cellStrikes = getStrikeTypes(cell.id);
+        const isSuggested = cell.value === latestCalledNumber && !cell.selected;
+
+        return (
+          <BingoCell 
+            key={cell.id} 
+            cell={cell} 
+            onSelect={() => onCellSelect(cell.id)} 
+            strikeTypes={cellStrikes}
+            isSuggested={isSuggested}
+          />
+        );
+      })}
     </div>
   );
 };

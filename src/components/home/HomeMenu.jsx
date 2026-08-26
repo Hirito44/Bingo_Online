@@ -4,13 +4,20 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import './HomeMenu.css';
 
-export const HomeMenu = ({ onSelectMode, onJoinRoomById }) => {
+export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerName, setAlertMsg }) => {
   const [roomId, setRoomId] = useState('');
 
   const handleJoinSubmit = (e) => {
     e.preventDefault();
-    if (roomId.trim()) {
-      onJoinRoomById(roomId.trim());
+    if (!roomId.trim()) {
+      setAlertMsg("Vui lòng nhập Mã Phòng!");
+      return;
+    }
+    const validRooms = ['RM1', 'RM2', 'RM3'];
+    if (validRooms.includes(roomId.trim().toUpperCase())) {
+      onJoinRoomById(roomId.trim().toUpperCase());
+    } else {
+      setAlertMsg("Mã phòng không tồn tại hoặc phòng đã đóng!");
     }
   };
 
@@ -23,6 +30,21 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById }) => {
       
       <Card className="menu-card">
         <div className="menu-options">
+          {/* Form Nhập Tên */}
+          <div className="name-form">
+            <span className="folk-label">DANH XƯNG:</span>
+            <Input 
+              placeholder="Ví dụ: Tý, Tèo..." 
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              className="folk-input name-input"
+            />
+          </div>
+
+          <div className="divider-folk">
+            <span className="divider-line"></span>
+          </div>
+
           {/* Form tham gia bằng ID */}
           <form className="join-form" onSubmit={handleJoinSubmit}>
             <Input 

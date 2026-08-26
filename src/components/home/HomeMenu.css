@@ -51,19 +51,42 @@
   gap: 1rem;
 }
 
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.folk-label {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.name-input {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  background: var(--bg-main) !important;
+}
+
 .join-form {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  align-items: stretch;
 }
 
 .folk-input {
   flex: 1;
   background: #fff;
-  border: 2px solid var(--text-muted) !important;
+  border: 2px solid var(--text-primary) !important;
   color: var(--text-primary);
   border-radius: 0;
   font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
 }
 
 .folk-input:focus {
@@ -76,10 +99,21 @@
   background: var(--color-secondary);
   color: var(--text-primary);
   font-weight: bold;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  padding: 0 1.5rem;
+  box-shadow: 3px 3px 0 rgba(62, 39, 35, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-join-id:hover {
   background: #E6B874;
+}
+.btn-join-id:active {
+  box-shadow: 1px 1px 0 rgba(62, 39, 35, 0.5);
+  transform: translate(2px, 2px);
 }
 
 .menu-btn {
