@@ -22,6 +22,7 @@
    THEME: OCEAN (Biển Cả / Glassmorphism)
    ========================================= */
 .bingo-board.theme-ocean {
+  --slash-color: #0ea5e9;
   background: rgba(14, 165, 233, 0.25);
   border-color: #0ea5e9;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
@@ -62,15 +63,11 @@
   100% { background: rgba(186, 230, 253, 0.8); transform: scale(1.08); }
 }
 
-.bingo-board.theme-ocean .strike-line {
-  background-color: #38bdf8;
-  box-shadow: 0 0 8px #0284c7;
-}
-
 /* =========================================
    THEME: TET (Lễ Hội / Đỏ Vàng)
    ========================================= */
 .bingo-board.theme-tet {
+  --slash-color: #fbbf24;
   background: #dc2626;
   border-color: #fbbf24;
   border-width: 6px;
@@ -112,9 +109,4 @@
 @keyframes blinkTet {
   0% { background: #fef08a; transform: scale(1); }
   100% { background: #fcd34d; transform: scale(1.12); box-shadow: 0 0 20px #f59e0b; }
-}
-
-.bingo-board.theme-tet .strike-line {
-  background-color: #f59e0b;
-  box-shadow: 0 0 8px #991b1b;
 }

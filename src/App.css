@@ -430,3 +430,46 @@
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 rgba(62, 39, 35, 0.5);
 }
+
+/* Nút Bật/Tắt Âm thanh */
+.sound-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #fff;
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 4px 4px 0px var(--color-secondary);
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.sound-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px var(--color-secondary);
+  background: var(--bg-card-hover);
+}
+
+.sound-toggle-btn:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0px var(--color-secondary);
+}
+
+@media (max-width: 600px) {
+  .sound-toggle-btn {
+    top: 15px;
+    right: 15px;
+    bottom: auto;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}

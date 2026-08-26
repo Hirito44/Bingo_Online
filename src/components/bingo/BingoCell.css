@@ -56,34 +56,35 @@
   z-index: 1;
 }
 
-/* Các nét gạch chiến thắng */
+/* Các nét gạch chiến thắng (Hiệu ứng chém Fruit Ninja) */
 .strike-line {
+  --slash-color: var(--color-secondary);
   position: absolute;
-  background-color: var(--color-secondary); /* Nét gạch màu vàng rơm */
-  z-index: 3;
-  box-shadow: 0 0 5px rgba(0,0,0,0.5);
-  /* Animation vẽ ra */
-  animation: drawLine 0.4s ease-out forwards;
+  background-color: #fff; /* Lõi lưỡi kiếm trắng sáng */
+  z-index: 4;
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--slash-color), 0 0 20px var(--slash-color);
+  pointer-events: none;
 }
 
 .strike-row {
-  height: 6px;
+  height: 4px;
   width: 0%;
-  left: 0;
+  left: -20%;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .strike-col {
-  width: 6px;
+  width: 4px;
   height: 0%;
-  top: 0;
+  top: -20%;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .strike-diag1 {
-  height: 6px;
+  height: 4px;
   width: 0%;
   top: 50%;
   left: 50%;
@@ -92,7 +93,7 @@
 }
 
 .strike-diag2 {
-  height: 6px;
+  height: 4px;
   width: 0%;
   top: 50%;
   left: 50%;
@@ -100,26 +101,21 @@
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-@keyframes drawLine {
-  to {
-    width: 140%; /* Cho 140% để nét gạch dài ra tận mép ô (đặc biệt là chéo) */
-    height: 140%; /* Chỉ áp dụng khi là cột dọc thì cần overwrite, ta sẽ xử lý riêng bên dưới */
-  }
-}
-
 .strike-row, .strike-diag1, .strike-diag2 {
-  animation: drawLineWidth 0.4s ease-out forwards;
+  animation: slashWidth 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 .strike-col {
-  animation: drawLineHeight 0.4s ease-out forwards;
+  animation: slashHeight 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
-@keyframes drawLineWidth {
-  from { width: 0%; }
-  to { width: 140%; }
+@keyframes slashWidth {
+  0% { width: 0%; opacity: 1; filter: brightness(2); }
+  60% { width: 140%; opacity: 1; filter: brightness(1.5); box-shadow: 0 0 15px var(--slash-color), 0 0 30px var(--slash-color); }
+  100% { width: 140%; opacity: 0.85; filter: brightness(1); }
 }
 
-@keyframes drawLineHeight {
-  from { height: 0%; }
-  to { height: 140%; }
+@keyframes slashHeight {
+  0% { height: 0%; opacity: 1; filter: brightness(2); }
+  60% { height: 140%; opacity: 1; filter: brightness(1.5); box-shadow: 0 0 15px var(--slash-color), 0 0 30px var(--slash-color); }
+  100% { height: 140%; opacity: 0.85; filter: brightness(1); }
 }

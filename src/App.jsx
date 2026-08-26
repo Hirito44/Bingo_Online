@@ -7,6 +7,7 @@ import { BingoBoard } from './components/bingo/BingoBoard';
 import { Button } from './components/ui/Button';
 import { checkWinCondition, generateSharedPool } from './utils/gameLogic';
 import * as roomService from './services/roomService';
+import { playClickSound, playSlashSound, playWinSound } from './utils/audio';
 import './App.css';
 
 function App() {
@@ -21,7 +22,17 @@ function App() {
   const [board, setBoard] = useState(() => JSON.parse(sessionStorage.getItem('board')) || []);
   const [winningData, setWinningData] = useState(() => JSON.parse(sessionStorage.getItem('winningData')) || { isWin: false, currentLines: 0, winningLines: [] });
 
+  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('isSoundEnabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
   const isLeavingRef = useRef(false);
+
+  // Lưu trữ Local Storage cho Sound
+  useEffect(() => {
+    localStorage.setItem('isSoundEnabled', JSON.stringify(isSoundEnabled));
+  }, [isSoundEnabled]);
 
   // Lưu trữ Session Storage
   useEffect(() => {
@@ -162,26 +173,40 @@ function App() {
     if (isMyTurn) {
       if (!cell.selected && !calledNumbers.includes(cell.value)) {
         // Hô số: cập nhật board nội bộ
+        if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
         
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+        
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
         
         // Gọi lên server
         await roomService.callNumber(currentRoomId, cell.value, (currentTurnIndex + 1) % turnOrder.length);
       } else if (!cell.selected && calledNumbers.includes(cell.value)) {
         // Gạch bù
+        if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
+        
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+        
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
       }
     } else {
       if (!cell.selected && calledNumbers.includes(cell.value)) {
+        if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
+        
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+        
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
       } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
         setAlertMsg("Chưa đến lượt của bạn, không được tự ý Hô số!");
@@ -226,6 +251,14 @@ function App() {
 
   return (
     <div className="app-container">
+      <button 
+        className="sound-toggle-btn" 
+        onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+        title={isSoundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
+      >
+        {isSoundEnabled ? '🔊' : '🔇'}
+      </button>
+
       {view !== 'home' && (
         <header className="mini-header" onClick={handleBackToHome}>
           <span className="logo-text">HỘI LÔ TÔ</span>
