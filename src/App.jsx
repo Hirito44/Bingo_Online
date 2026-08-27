@@ -41,7 +41,6 @@ function App() {
 
   // Lưu trữ Session Storage
   useEffect(() => {
-    
     sessionStorage.setItem('playerName', playerName);
     sessionStorage.setItem('avatar', avatar);
     sessionStorage.setItem('myPlayerId', myPlayerId);
@@ -64,7 +63,237 @@ function App() {
     window.addEventListener('beforeunload', handleUnload);
     window.addEventListener('pagehide', handleUnload);
 
-    return (
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      handleUnload(); // Ngắt kết nối khi component unmount
+    };
+  }, []);
+
+  // Subscribe to Room
+  useEffect(() => {
+    if (currentRoomId) {
+      const unsubscribe = roomService.subscribeToRoom(currentRoomId, (data) => {
+        if (data) {
+          // Kiểm tra xem mình có bị đuổi khỏi phòng không
+          if (!data.players || !data.players[myPlayerId]) {
+            if (!isLeavingRef.current) {
+              setAlertMsg("Bạn đã bị Chủ phòng đuổi khỏi bàn!");
+              handleBackToHome(true);
+            }
+            return;
+          }
+
+          setRoomData(data);
+
+          // Lắng nghe chuyển trạng thái
+          if (data.gameState.status === 'playing' && roomData?.gameState?.status !== 'playing') {
+            // Chỉ reset nếu từ sảnh chờ vào
+            if (roomData?.gameState?.status === 'waiting' || !roomData) {
+              setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
+            }
+          }
+          if (data.gameState.status === 'waiting' && roomData?.gameState?.status !== 'waiting') {
+            if (roomData?.gameState?.status === 'playing') {
+              setBoard([]); // reset board
+              setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
+            }
+          }
+        } else {
+          // Phòng bị xóa (Chủ phòng thoát)
+          if (currentRoomId && !isLeavingRef.current) {
+            setAlertMsg("Phòng chơi đã bị Chủ phòng giải tán!");
+            handleBackToHome(true);
+          }
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [currentRoomId, roomData?.gameState?.status]);
+
+  // Sync my lines to server when I win or lines increase
+  useEffect(() => {
+    if (roomData?.gameState?.status === 'playing' && roomData && currentRoomId) {
+      const myData = roomData.players[myPlayerId];
+      if (myData && myData.lines !== winningData.currentLines) {
+        roomService.updatePlayerLines(currentRoomId, myPlayerId, winningData.currentLines);
+        if (winningData.isWin && !roomData.gameState.winner) {
+          roomService.setWinner(currentRoomId, playerName);
+        }
+      }
+    }
+  }, [winningData.currentLines, winningData.isWin, roomData?.gameState?.status, currentRoomId, roomData, myPlayerId, playerName]);
+
+  // Derived States
+  const isHost = roomData?.players[myPlayerId]?.isHost || false;
+  const turnOrder = roomData?.gameState.turnOrder || [];
+  const currentTurnIndex = roomData?.gameState.currentTurnIndex || 0;
+  const calledNumbers = roomData?.gameState.calledNumbers || [];
+  const isMyTurn = turnOrder[currentTurnIndex] === myPlayerId;
+  const requiredLines = roomData?.settings.requiredLines || 1;
+
+  const handleSelectMode = (mode) => {
+    if (!playerName.trim()) {
+      setAlertMsg("Vui lòng nhập Danh xưng của bạn trước khi vào chơi nhé!");
+      return;
+    }
+    if (mode === 'online') navigate('/loto/rooms');
+    if (mode === 'create') navigate('/loto/create');
+  };
+
+  const handleJoinRoomById = async (id) => {
+    if (!playerName.trim()) {
+      setAlertMsg("Vui lòng nhập Danh xưng của bạn trước khi vào phòng!");
+      return;
+    }
+    try {
+      await roomService.joinRoom(id, { id: myPlayerId, name: playerName, avatar });
+      setCurrentRoomId(id);
+      navigate(`/loto/room/${id}`);
+    } catch (err) {
+      if (err.message === 'RoomNotFound') {
+        setAlertMsg("Phòng không tồn tại!");
+      } else if (err.message === 'RoomAlreadyPlaying') {
+        setAlertMsg("Phòng này đang trong ván chơi!");
+      } else if (err.message === 'RoomIsLocked') {
+        setAlertMsg("Phòng đã bị khoá bởi Chủ bàn, không thể tham gia!");
+      } else {
+        setAlertMsg("Có lỗi xảy ra khi vào phòng: " + err.message);
+      }
+    }
+  };
+
+  const handleCreateRoomDone = async (roomName, rows, cols, reqLines, mode, drawMode) => {
+    const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Sinh tập số chung ngay lúc tạo phòng
+    const pool = generateSharedPool(rows * cols, mode);
+
+    await roomService.createRoom(
+      newRoomId,
+      { rows, cols, requiredLines: reqLines, roomName, theme: 'classic', gameMode: mode || 'classic', drawMode: drawMode || 'hostOnly' },
+      { id: myPlayerId, name: playerName, avatar },
+      pool
+    );
+
+    setCurrentRoomId(newRoomId);
+    navigate(`/loto/room/${newRoomId}`);
+  };
+
+  const handleStartGame = async () => {
+    // Nếu là host, gọi service để bắt đầu
+    if (isHost && roomData) {
+      const players = Object.keys(roomData.players);
+      const shuffledIds = players.sort(() => Math.random() - 0.5);
+      await roomService.startGame(currentRoomId, shuffledIds);
+    }
+  };
+
+  const handleCellSelect = async (id) => {
+    if (roomData?.gameState?.status !== 'playing' || winningData.isWin || roomData?.gameState.winner) return;
+
+    const gameMode = roomData?.settings.gameMode || 'classic';
+
+    const cell = board.find(c => c.id === id);
+    if (!cell || cell.value === null) return;
+
+    if (gameMode === 'standard') {
+      if (!cell.selected && calledNumbers.includes(cell.value)) {
+        if (isSoundEnabled) playClickSound();
+        const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
+        setBoard(newBoard);
+
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+
+        setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
+      } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
+        setAlertMsg("Số này chưa được gọi!");
+      }
+      return;
+    }
+
+    if (isMyTurn) {
+      if (!cell.selected && !calledNumbers.includes(cell.value)) {
+        // Hô số: cập nhật board nội bộ
+        if (isSoundEnabled) playClickSound();
+        const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
+        setBoard(newBoard);
+
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+
+        setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
+
+        // Gọi lên server
+        await roomService.callNumber(currentRoomId, cell.value, (currentTurnIndex + 1) % turnOrder.length);
+      } else if (!cell.selected && calledNumbers.includes(cell.value)) {
+        // Gạch bù
+        if (isSoundEnabled) playClickSound();
+        const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
+        setBoard(newBoard);
+
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+
+        setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
+      }
+    } else {
+      if (!cell.selected && calledNumbers.includes(cell.value)) {
+        if (isSoundEnabled) playClickSound();
+        const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
+        setBoard(newBoard);
+
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+
+        setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
+      } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
+        setAlertMsg("Chưa đến lượt của bạn, không được tự ý Hô số!");
+      }
+    }
+  };
+
+  const handleBackToHome = (isForced = false) => {
+    // React onClick thường truyền event object vào. Tránh việc event object làm isForced thành true
+    if (typeof isForced === 'object') {
+      isForced = false;
+    }
+
+    isLeavingRef.current = true;
+    if (currentRoomId && !isForced) {
+      if (roomData?.players[myPlayerId]?.isHost) {
+        roomService.deleteRoom(currentRoomId);
+      } else {
+        roomService.removePlayer(currentRoomId, myPlayerId);
+      }
+    }
+    navigate('/loto');
+    setBoard([]);
+    setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
+    setCurrentRoomId('');
+    setRoomData(null);
+    sessionStorage.removeItem('currentRoomId'); // Clear room from session
+
+    // Reset cờ sau khi xử lý xong để lần chơi sau bình thường
+    setTimeout(() => {
+      isLeavingRef.current = false;
+    }, 500);
+  };
+
+  const handlePlayAgain = () => {
+    if (isHost) {
+      roomService.playAgain(currentRoomId);
+    } else {
+      setAlertMsg("Đang chờ chủ phòng chơi ván mới...");
+    }
+  };
+
+  return (
     <div className="app-container">
       <button
         className="sound-toggle-btn"
@@ -266,3 +495,6 @@ function App() {
       </main>
     </div>
   );
+}
+
+export default App;
