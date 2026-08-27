@@ -11,19 +11,19 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const parsedSize = parseInt(size, 10);
-    const parsedLines = parseInt(requiredLines, 10);
+    const parsedSize = Number(size);
+    const parsedLines = Number(requiredLines);
 
     if (!roomName || !roomName.trim()) {
       setAlertMsg("Vui lòng nhập Tên Bàn Chơi!");
       return;
     }
-    if (isNaN(parsedSize) || parsedSize < 3 || parsedSize > 10) {
-      setAlertMsg("Kích thước bảng phải từ 3 đến 10!");
+    if (!Number.isInteger(parsedSize) || parsedSize < 3 || parsedSize > 10) {
+      setAlertMsg("Kích thước bảng phải là số nguyên từ 3 đến 10!");
       return;
     }
-    if (isNaN(parsedLines) || parsedLines < 1 || parsedLines > parsedSize) {
-      setAlertMsg(`Số xiên để thắng phải từ 1 đến ${parsedSize}!`);
+    if (!Number.isInteger(parsedLines) || parsedLines < 1 || parsedLines > parsedSize) {
+      setAlertMsg(`Số xiên để thắng phải là số nguyên từ 1 đến ${parsedSize}!`);
       return;
     }
 
