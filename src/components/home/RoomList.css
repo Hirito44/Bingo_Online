@@ -158,7 +158,7 @@
   }
   .list-title {
     text-align: center;
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 6vw, 2rem);
   }
   .list-card {
     padding: 1rem !important;
