@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -13,7 +13,10 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerNa
   ];
   
   const [roomId, setRoomId] = useState('');
-  const [menuView, setMenuView] = useState('hub');
+  const [menuView, setMenuView] = useState(() => sessionStorage.getItem('menuView') || 'hub');
+  useEffect(() => {
+    sessionStorage.setItem('menuView', menuView);
+  }, [menuView]);
 
   const handleJoinSubmit = (e) => {
     e.preventDefault();
@@ -156,3 +159,4 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerNa
     </div>
   );
 };
+
