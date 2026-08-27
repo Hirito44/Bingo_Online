@@ -1,70 +1,70 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+const fs = require('fs');
+let code = fs.readFileSync('src/App.jsx', 'utf8');
+
+// 1. Add imports
+code = code.replace("import { HomeMenu } from './components/home/HomeMenu';", 
+`import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { GameHub } from './components/home/GameHub';
-import { LotoMenu } from './components/home/LotoMenu';
-import { RoomList } from './components/home/RoomList';
-import { WaitingRoom } from './components/home/WaitingRoom';
-import { GameSettings } from './components/bingo/GameSettings';
-import { BingoBoard } from './components/bingo/BingoBoard';
-import { Button } from './components/ui/Button';
-import { checkWinCondition, generateSharedPool } from './utils/gameLogic';
-import * as roomService from './services/roomService';
-import { playClickSound, playSlashSound, playWinSound } from './utils/audio';
-import './App.css';
+import { LotoMenu } from './components/home/LotoMenu';`);
 
-function App() {
+// 2. Add hooks
+code = code.replace("function App() {", 
+`function App() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [view, setView] = useState(() => sessionStorage.getItem('view') || 'home');
-  const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('playerName') || '');
-  const [avatar, setAvatar] = useState(() => sessionStorage.getItem('avatar') || '/avatars/teu.png');
-  const [alertMsg, setAlertMsg] = useState('');
+  const location = useLocation();`);
 
-  const [myPlayerId] = useState(() => sessionStorage.getItem('myPlayerId') || Date.now().toString());
-  const [currentRoomId, setCurrentRoomId] = useState(() => sessionStorage.getItem('currentRoomId') || '');
-  const [roomData, setRoomData] = useState(null);
+// 3. Remove view state (we'll just comment it out to be safe, or just leave it but ignore it)
+code = code.replace("sessionStorage.setItem('view', view);", "");
+code = code.replace("}, [view, playerName,", "}, [playerName,");
+// Fix the dependency arrays
+code = code.replace("}, [winningData.currentLines, winningData.isWin, view, currentRoomId, roomData, myPlayerId, playerName]);",
+"}, [winningData.currentLines, winningData.isWin, location.pathname, currentRoomId, roomData, myPlayerId, playerName]);");
+code = code.replace("}, [currentRoomId, view]);", "}, [currentRoomId, location.pathname]);");
 
-  const [board, setBoard] = useState(() => JSON.parse(sessionStorage.getItem('board')) || []);
-  const [winningData, setWinningData] = useState(() => JSON.parse(sessionStorage.getItem('winningData')) || { isWin: false, currentLines: 0, winningLines: [] });
+// 4. Targeted replacements
+code = code.replace(
+  "if (mode === 'online') setView('room-list-online');", 
+  "if (mode === 'online') navigate('/loto/rooms');"
+);
+code = code.replace(
+  "if (mode === 'create') setView('create-room');",
+  "if (mode === 'create') navigate('/loto/create');"
+);
 
-  const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
-    const saved = localStorage.getItem('isSoundEnabled');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
+code = code.replace(
+  "setCurrentRoomId(id);\n      setView('waiting-room');",
+  "setCurrentRoomId(id);\n      navigate('/loto/room/' + id);"
+);
 
-  const isLeavingRef = useRef(false);
+code = code.replace(
+  "setCurrentRoomId(newRoomId);\n    setView('waiting-room');",
+  "setCurrentRoomId(newRoomId);\n    navigate('/loto/room/' + newRoomId);"
+);
 
-  // Lưu trữ Local Storage cho Sound
-  useEffect(() => {
-    localStorage.setItem('isSoundEnabled', JSON.stringify(isSoundEnabled));
-  }, [isSoundEnabled]);
+code = code.replace(
+  "setView('home');",
+  "navigate('/loto');"
+);
 
-  // Lưu trữ Session Storage
-  useEffect(() => {
-    
-    sessionStorage.setItem('playerName', playerName);
-    sessionStorage.setItem('avatar', avatar);
-    sessionStorage.setItem('myPlayerId', myPlayerId);
-    sessionStorage.setItem('currentRoomId', currentRoomId);
-    sessionStorage.setItem('board', JSON.stringify(board));
-    sessionStorage.setItem('winningData', JSON.stringify(winningData));
-  }, [playerName, avatar, myPlayerId, currentRoomId, board, winningData]);
+// Remove view updates from subscribe (we derive view from url and room state)
+code = code.replace("setView('playing');", "");
+code = code.replace("setView('waiting-room');", "");
+// Inside subscribeToRoom
+code = code.replace("if (data.gameState.status === 'playing' && view !== 'playing') {", 
+`if (data.gameState.status === 'playing') {`);
+code = code.replace("if (view === 'waiting-room') {", `if (roomData?.gameState?.status === 'waiting') {`);
+code = code.replace("if (data.gameState.status === 'waiting' && view !== 'waiting-room') {", 
+`if (data.gameState.status === 'waiting') {`);
+code = code.replace("if (view === 'playing') {", `if (roomData?.gameState?.status === 'playing') {`);
 
-  // Quản lý trạng thái kết nối Firebase (Tối ưu connections)
-  useEffect(() => {
-    // Luôn đảm bảo online khi App đang chạy
-    roomService.connectFirebase();
+// Also fix useEffect dependency array that still has 'view'
+code = code.replace("view === 'playing'", "roomData?.gameState?.status === 'playing'");
 
-    const handleUnload = () => {
-      // Ngắt kết nối ngay khi người dùng đóng tab, thoát app, hoặc reload
-      roomService.disconnectFirebase();
-    };
+// 5. Update the return block
+const returnStartIndex = code.indexOf('return (');
+const returnEndIndex = code.lastIndexOf(');') + 2;
 
-    // pagehide hoạt động tốt hơn trên trình duyệt di động so với unload/beforeunload
-    window.addEventListener('beforeunload', handleUnload);
-    window.addEventListener('pagehide', handleUnload);
-
-    return (
+const newReturn = `return (
     <div className="app-container">
       <button
         className="sound-toggle-btn"
@@ -143,14 +143,14 @@ function App() {
                         ) : (
                           <span className="waiting-host">
                             {roomData.settings.drawMode === 'turnBased'
-                              ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...`
+                              ? \`Đang đợi \${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...\`
                               : "Đang đợi Chủ Bàn bốc số..."}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
-                        {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
+                      <div className={\`turn-indicator \${isMyTurn ? 'my-turn' : ''}\`}>
+                        {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : \`Đang đợi \${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...\`}
                       </div>
                     )}
 
@@ -158,7 +158,7 @@ function App() {
                       <span className="history-label">ĐÃ HÔ:</span>
                       <div className="history-numbers">
                         {calledNumbers.map((n, i) => (
-                          <span key={i} className={`called-chip ${i === 0 ? 'latest' : ''}`}>{n}</span>
+                          <span key={i} className={\`called-chip \${i === 0 ? 'latest' : ''}\`}>{n}</span>
                         ))}
                         {calledNumbers.length === 0 && <span className="no-calls">Trận đấu bắt đầu!</span>}
                       </div>
@@ -196,7 +196,7 @@ function App() {
                             const isWinner = lines >= requiredLines;
 
                             return (
-                              <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
+                              <li key={id} className={\`progress-item \${isMe ? 'is-me' : ''} \${isWinner ? 'is-winner' : ''}\`}>
                                 <div className="player-info">
                                   <span className="player-avatar">
                                     {isWinner ? '🏆' : (p.avatar ? <img src={p.avatar} alt="avatar" className="board-avatar" /> : (isMe ? '👤' : (p.isHost ? '👑' : '👻')))}
@@ -227,8 +227,8 @@ function App() {
                         <h1 className="victory-title">TỚI TRẮNG !</h1>
                         <p className="victory-subtitle">
                           {roomData.gameState.winner === playerName
-                            ? `Chúc mừng bạn đã trúng đủ ${requiredLines} xiên!`
-                            : `Người chơi ${roomData.gameState.winner} đã tới trắng trước!`}
+                            ? \`Chúc mừng bạn đã trúng đủ \${requiredLines} xiên!\`
+                            : \`Người chơi \${roomData.gameState.winner} đã tới trắng trước!\`}
                         </p>
                         <div className="victory-actions">
                           {isHost ? (
@@ -265,4 +265,9 @@ function App() {
         )}
       </main>
     </div>
-  );
+  );`;
+
+code = code.substring(0, returnStartIndex) + newReturn;
+
+fs.writeFileSync('src/App.jsx', code);
+console.log('Done refactoring App.jsx');
