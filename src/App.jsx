@@ -44,6 +44,27 @@ function App() {
     sessionStorage.setItem('winningData', JSON.stringify(winningData));
   }, [view, playerName, myPlayerId, currentRoomId, board, winningData]);
 
+  // Quản lý trạng thái kết nối Firebase (Tối ưu connections)
+  useEffect(() => {
+    // Luôn đảm bảo online khi App đang chạy
+    roomService.connectFirebase();
+
+    const handleUnload = () => {
+      // Ngắt kết nối ngay khi người dùng đóng tab, thoát app, hoặc reload
+      roomService.disconnectFirebase();
+    };
+
+    // pagehide hoạt động tốt hơn trên trình duyệt di động so với unload/beforeunload
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      handleUnload(); // Ngắt kết nối khi component unmount
+    };
+  }, []);
+
   // Subscribe to Room
   useEffect(() => {
     if (currentRoomId) {

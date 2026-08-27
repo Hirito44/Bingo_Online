@@ -57,6 +57,9 @@ export const joinRoom = async (roomId, playerInfo) => {
     joinedAt: Date.now()
   });
   
+  // Đảm bảo xóa người chơi khi họ ngắt kết nối (đóng tab/mất mạng)
+  playerRef.onDisconnect().remove();
+  
   return snapshot.val();
 };
 
@@ -245,4 +248,13 @@ export const getOnlineRooms = (callback) => {
   return () => {
     roomsRef.off('value', handleData);
   };
+};
+
+// 13. Quản lý kết nối Firebase (Tối ưu connection)
+export const disconnectFirebase = () => {
+  database.goOffline();
+};
+
+export const connectFirebase = () => {
+  database.goOnline();
 };
