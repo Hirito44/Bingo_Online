@@ -11,6 +11,7 @@ export const createRoom = async (roomId, settings, hostInfo, sharedPool) => {
     players: {
       [hostInfo.id]: {
         name: hostInfo.name,
+        avatar: hostInfo.avatar || null,
         isHost: true,
         lines: 0,
         joinedAt: Date.now()
@@ -52,6 +53,7 @@ export const joinRoom = async (roomId, playerInfo) => {
   const playerRef = database.ref(`rooms/${roomId}/players/${playerInfo.id}`);
   await playerRef.set({
     name: playerInfo.name,
+    avatar: playerInfo.avatar || null,
     isHost: false,
     lines: 0,
     joinedAt: Date.now()

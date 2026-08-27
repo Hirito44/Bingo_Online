@@ -107,17 +107,19 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
           <div className="players-list-box">
             <h3 className="list-heading">NGƯỜI CHƠI ({players.length}/10)</h3>
             <ul className="players-list">
-              {players.map((p) => (
-                <li key={p.id || p.name} className="player-item">
+              {Object.entries(roomData.players || {}).map(([id, p]) => (
+                <li key={id} className={`player-item ${id === myPlayerId ? 'is-me' : ''}`}>
                   <div className="player-info-basic">
-                    <span className="player-avatar">👤</span>
-                    <span className="player-name">{p.name} {p.id === myPlayerId && "(Bạn)"}</span>
+                    <div className="avatar">
+                      {p.avatar ? <img src={p.avatar} alt="avatar" className="waiting-avatar" /> : (p.isHost ? '👑' : '👤')}
+                    </div>
+                    <span className="player-name">{p.name} {id === myPlayerId && "(Bạn)"}</span>
                     {p.isHost && <span className="host-badge">Chủ bàn</span>}
                   </div>
-                  {isHost && p.id !== myPlayerId && (
+                  {isHost && id !== myPlayerId && (
                     <button
                       className="btn-kick"
-                      onClick={() => handleKickPlayer(p.id)}
+                      onClick={() => handleKickPlayer(id)}
                       title="Đuổi khỏi phòng"
                     >
                       X
