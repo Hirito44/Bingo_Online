@@ -13,6 +13,7 @@ import './App.css';
 function App() {
   const [view, setView] = useState(() => sessionStorage.getItem('view') || 'home');
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('playerName') || '');
+  const [avatar, setAvatar] = useState(() => sessionStorage.getItem('avatar') || '/avatars/teu.png');
   const [alertMsg, setAlertMsg] = useState('');
 
   const [myPlayerId] = useState(() => sessionStorage.getItem('myPlayerId') || Date.now().toString());
@@ -38,11 +39,12 @@ function App() {
   useEffect(() => {
     sessionStorage.setItem('view', view);
     sessionStorage.setItem('playerName', playerName);
+    sessionStorage.setItem('avatar', avatar);
     sessionStorage.setItem('myPlayerId', myPlayerId);
     sessionStorage.setItem('currentRoomId', currentRoomId);
     sessionStorage.setItem('board', JSON.stringify(board));
     sessionStorage.setItem('winningData', JSON.stringify(winningData));
-  }, [view, playerName, myPlayerId, currentRoomId, board, winningData]);
+  }, [view, playerName, avatar, myPlayerId, currentRoomId, board, winningData]);
 
   // Quản lý trạng thái kết nối Firebase (Tối ưu connections)
   useEffect(() => {
@@ -144,7 +146,7 @@ function App() {
       return;
     }
     try {
-      await roomService.joinRoom(id, { id: myPlayerId, name: playerName });
+      await roomService.joinRoom(id, { id: myPlayerId, name: playerName, avatar });
       setCurrentRoomId(id);
       setView('waiting-room');
     } catch (err) {
@@ -169,7 +171,7 @@ function App() {
     await roomService.createRoom(
       newRoomId,
       { rows, cols, requiredLines: reqLines, roomName, theme: 'classic', gameMode: mode || 'classic', drawMode: drawMode || 'hostOnly' },
-      { id: myPlayerId, name: playerName },
+      { id: myPlayerId, name: playerName, avatar },
       pool
     );
 
@@ -302,7 +304,6 @@ function App() {
 
       {view !== 'home' && (
         <header className="mini-header" onClick={handleBackToHome}>
-          <img src="/favicon.png" alt="Logo Lô Tô" className="folk-logo-mini" />
           <span className="logo-text">HỘI LÔ TÔ</span>
         </header>
       )}
@@ -315,6 +316,8 @@ function App() {
             playerName={playerName}
             setPlayerName={setPlayerName}
             setAlertMsg={setAlertMsg}
+            avatar={avatar}
+            setAvatar={setAvatar}
           />
         )}
 
@@ -361,8 +364,8 @@ function App() {
                     </button>
                   ) : (
                     <span className="waiting-host">
-                      {roomData.settings.drawMode === 'turnBased' 
-                        ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...` 
+                      {roomData.settings.drawMode === 'turnBased'
+                        ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...`
                         : "Đang đợi Chủ Bàn bốc số..."}
                     </span>
                   )}
@@ -410,23 +413,25 @@ function App() {
                   {Object.entries(roomData.players)
                     .sort(([, a], [, b]) => b.lines - a.lines)
                     .map(([id, p]) => {
-                    const isMe = id === myPlayerId;
-                    const lines = p.lines;
-                    const isWinner = lines >= requiredLines;
+                      const isMe = id === myPlayerId;
+                      const lines = p.lines;
+                      const isWinner = lines >= requiredLines;
 
-                    return (
-                      <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
-                        <div className="player-info">
-                          <span className="player-avatar">{isWinner ? '🏆' : (isMe ? '👤' : (p.isHost ? '👑' : '👻'))}</span>
-                          <span className="player-name">{p.name} {isMe && '(Bạn)'}</span>
-                        </div>
-                        <div className="player-score">
-                          <span className="score-number">{lines}</span>
-                          <span className="score-target">/{requiredLines} xiên</span>
-                        </div>
-                      </li>
-                    );
-                  })}
+                      return (
+                        <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
+                          <div className="player-info">
+                            <span className="player-avatar">
+                              {isWinner ? '🏆' : (p.avatar ? <img src={p.avatar} alt="avatar" className="board-avatar" /> : (isMe ? '👤' : (p.isHost ? '👑' : '👻')))}
+                            </span>
+                            <span className="player-name">{p.name} {isMe && '(Bạn)'}</span>
+                          </div>
+                          <div className="player-score">
+                            <span className="score-number">{lines}</span>
+                            <span className="score-target">/{requiredLines} xiên</span>
+                          </div>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             </div>
