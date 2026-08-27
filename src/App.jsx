@@ -138,15 +138,15 @@ function App() {
     }
   };
 
-  const handleCreateRoomDone = async (roomName, rows, cols, reqLines, theme) => {
+  const handleCreateRoomDone = async (roomName, rows, cols, reqLines, mode) => {
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     // Sinh tập số chung ngay lúc tạo phòng
-    const pool = generateSharedPool(rows * cols);
+    const pool = generateSharedPool(rows * cols, mode);
     
     await roomService.createRoom(
       newRoomId,
-      { rows, cols, requiredLines: reqLines, roomName, theme: theme || 'classic' },
+      { rows, cols, requiredLines: reqLines, roomName, theme: 'classic', gameMode: mode || 'classic' },
       { id: myPlayerId, name: playerName },
       pool
     );
@@ -166,9 +166,28 @@ function App() {
 
   const handleCellSelect = async (id) => {
     if (view !== 'playing' || winningData.isWin || roomData?.gameState.winner) return;
+    
+    const gameMode = roomData?.settings.gameMode || 'classic';
 
     const cell = board.find(c => c.id === id);
-    if (!cell) return;
+    if (!cell || cell.value === null) return;
+
+    if (gameMode === 'standard') {
+      if (!cell.selected && calledNumbers.includes(cell.value)) {
+        if (isSoundEnabled) playClickSound();
+        const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
+        setBoard(newBoard);
+        
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
+        if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
+        if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
+        
+        setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
+      } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
+        setAlertMsg("Số này chưa được gọi!");
+      }
+      return;
+    }
 
     if (isMyTurn) {
       if (!cell.selected && !calledNumbers.includes(cell.value)) {
@@ -177,7 +196,7 @@ function App() {
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
         
-        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
         
@@ -191,7 +210,7 @@ function App() {
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
         
-        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
         
@@ -203,7 +222,7 @@ function App() {
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
         
-        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines);
+        const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
         
@@ -309,9 +328,25 @@ function App() {
         {view === 'playing' && roomData && (
           <div className="game-area fade-in">
             <div className="calling-section">
-              <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
-                {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
-              </div>
+              {roomData.settings.gameMode === 'standard' ? (
+                <div className="turn-indicator standard-mode">
+                  {isHost ? (
+                    <button 
+                      className="draw-number-btn" 
+                      onClick={() => roomService.drawRandomNumber(currentRoomId)}
+                      disabled={winningData.isWin || roomData.gameState.winner}
+                    >
+                      🎲 BỐC SỐ
+                    </button>
+                  ) : (
+                    <span className="waiting-host">Đang đợi Chủ Bàn bốc số...</span>
+                  )}
+                </div>
+              ) : (
+                <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
+                  {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
+                </div>
+              )}
               
               <div className="called-history">
                 <span className="history-label">ĐÃ HÔ:</span>

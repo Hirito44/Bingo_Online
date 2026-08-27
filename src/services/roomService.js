@@ -89,6 +89,31 @@ export const callNumber = async (roomId, number, newTurnIndex, playersUpdates = 
   await database.ref().update(updates);
 };
 
+// 5.1 Draw random number (Standard Mode - Host only)
+export const drawRandomNumber = async (roomId) => {
+  const roomRef = database.ref(`rooms/${roomId}`);
+  const snapshot = await roomRef.get();
+  const roomData = snapshot.val();
+
+  if (!roomData) return null;
+
+  const sharedPool = roomData.sharedPool || [];
+  const calledNumbers = roomData.gameState.calledNumbers || [];
+
+  // Tìm các số chưa gọi
+  const remaining = sharedPool.filter(n => !calledNumbers.includes(n));
+  if (remaining.length === 0) return null;
+
+  // Bốc ngẫu nhiên
+  const randomIndex = Math.floor(Math.random() * remaining.length);
+  const pickedNumber = remaining[randomIndex];
+
+  const calledNumbersRef = database.ref(`rooms/${roomId}/gameState/calledNumbers`);
+  await calledNumbersRef.set([pickedNumber, ...calledNumbers]);
+
+  return pickedNumber;
+};
+
 // 6. Update Player Progress
 export const updatePlayerLines = async (roomId, playerId, lines) => {
   const playerRef = database.ref(`rooms/${roomId}/players/${playerId}`);

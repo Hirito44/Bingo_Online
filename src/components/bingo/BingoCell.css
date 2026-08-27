@@ -119,3 +119,15 @@
   60% { height: 140%; opacity: 1; filter: brightness(1.5); box-shadow: 0 0 15px var(--slash-color), 0 0 30px var(--slash-color); }
   100% { height: 140%; opacity: 0.85; filter: brightness(1); }
 }
+
+.empty-cell {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  cursor: default;
+}
+.empty-cell:hover, .empty-cell:hover:not(.selected) {
+  transform: none;
+  box-shadow: none;
+  background: rgba(0, 0, 0, 0.1);
+}

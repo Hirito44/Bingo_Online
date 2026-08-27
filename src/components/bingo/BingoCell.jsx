@@ -2,6 +2,12 @@ import React from 'react';
 import './BingoCell.css';
 
 export const BingoCell = ({ cell, onSelect, strikeTypes = [], isSuggested = false }) => {
+  if (cell.value === null) {
+    return (
+      <div className="bingo-cell empty-cell"></div>
+    );
+  }
+
   return (
     <div 
       className={`bingo-cell ${cell.selected ? 'selected' : ''} ${isSuggested ? 'suggested' : ''}`}

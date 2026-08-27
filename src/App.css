@@ -77,6 +77,52 @@
   animation: pulse 1s infinite alternate;
 }
 
+.turn-indicator.standard-mode {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-color: var(--color-primary);
+  background: rgba(140, 33, 33, 0.05);
+}
+
+.draw-number-btn {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  padding: 0.75rem 2rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(62, 39, 35, 0.4);
+  transition: all 0.2s ease;
+  animation: pulse 1.5s infinite alternate;
+}
+
+.draw-number-btn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px rgba(62, 39, 35, 0.3);
+}
+
+.draw-number-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px rgba(62, 39, 35, 0.5);
+}
+
+.draw-number-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+  animation: none;
+  box-shadow: none;
+}
+
+.waiting-host {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
 .call-form {
   display: flex;
   gap: 0.5rem;

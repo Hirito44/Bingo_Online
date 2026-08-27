@@ -16,9 +16,9 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
   useEffect(() => {
     // Generate initial board on mount based on shared pool
     if (roomData?.sharedPool && board.length === 0) {
-      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool));
+      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool, roomData.settings.gameMode));
     }
-  }, [roomData?.sharedPool, rows, cols, board.length, setBoard]);
+  }, [roomData?.sharedPool, rows, cols, board.length, setBoard, roomData?.settings?.gameMode]);
 
   const handleKickPlayer = async (playerId) => {
     if (isHost && playerId !== myPlayerId) {
@@ -32,7 +32,7 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
 
   const handleShuffleBoard = () => {
     if (roomData?.sharedPool) {
-      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool));
+      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool, roomData.settings.gameMode));
     }
   };
 
