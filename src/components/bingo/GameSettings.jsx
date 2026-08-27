@@ -36,7 +36,7 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
         <Button variant="secondary" onClick={onBack}>⬅ QUAY LẠI</Button>
       </div>
       <Card title="CẤU HÌNH BÀN CHƠI" className="max-w-md mx-auto settings-card">
-        <form onSubmit={handleSubmit} className="settings-form">
+        <form onSubmit={handleSubmit} className="settings-form" noValidate>
           
           <Input 
             label="TÊN BÀN CHƠI" 

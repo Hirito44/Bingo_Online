@@ -100,6 +100,16 @@ function App() {
     }
   }, [winningData.currentLines, winningData.isWin, view, currentRoomId, roomData, myPlayerId, playerName]);
 
+  // Auto-dismiss alert messages
+  useEffect(() => {
+    if (alertMsg) {
+      const timer = setTimeout(() => {
+        setAlertMsg('');
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMsg]);
+
   // Derived States
   const isHost = roomData?.players[myPlayerId]?.isHost || false;
   const turnOrder = roomData?.gameState.turnOrder || [];
@@ -400,14 +410,10 @@ function App() {
         )}
 
         {alertMsg && (
-          <div className="alert-modal-overlay">
-            <div className="alert-modal">
-              <h3 className="alert-title">LƯU Ý</h3>
-              <p className="alert-message">{alertMsg}</p>
-              <Button onClick={() => setAlertMsg('')} variant="primary" className="btn-alert-close">
-                ĐÃ HIỂU
-              </Button>
-            </div>
+          <div className="toast-notification">
+            <div className="toast-icon">⚠️</div>
+            <div className="toast-content">{alertMsg}</div>
+            <button className="toast-close" onClick={() => setAlertMsg('')}>&times;</button>
           </div>
         )}
       </main>
