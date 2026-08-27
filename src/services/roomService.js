@@ -5,7 +5,8 @@ export const createRoom = async (roomId, settings, hostInfo, sharedPool) => {
   const roomRef = database.ref(`rooms/${roomId}`);
   
   const newRoomData = {
-    settings,
+    createdAt: Date.now(),
+    settings: { ...settings, isLocked: false },
     sharedPool,
     players: {
       [hostInfo.id]: {
@@ -25,6 +26,8 @@ export const createRoom = async (roomId, settings, hostInfo, sharedPool) => {
   };
 
   await roomRef.set(newRoomData);
+  roomRef.onDisconnect().remove();
+  
   return newRoomData;
 };
 
@@ -40,6 +43,10 @@ export const joinRoom = async (roomId, playerInfo) => {
   const roomData = snapshot.val();
   if (roomData.gameState.status !== 'waiting') {
     throw new Error('RoomAlreadyPlaying');
+  }
+  
+  if (roomData.settings?.isLocked) {
+    throw new Error('RoomIsLocked');
   }
 
   const playerRef = database.ref(`rooms/${roomId}/players/${playerInfo.id}`);
@@ -87,6 +94,37 @@ export const callNumber = async (roomId, number, newTurnIndex, playersUpdates = 
   }
 
   await database.ref().update(updates);
+};
+
+// 5.1 Draw random number (Standard Mode)
+export const drawRandomNumber = async (roomId, newTurnIndex = null) => {
+  const roomRef = database.ref(`rooms/${roomId}`);
+  const snapshot = await roomRef.get();
+  const roomData = snapshot.val();
+
+  if (!roomData) return null;
+
+  const sharedPool = roomData.sharedPool || [];
+  const calledNumbers = roomData.gameState.calledNumbers || [];
+
+  // Tìm các số chưa gọi
+  const remaining = sharedPool.filter(n => !calledNumbers.includes(n));
+  if (remaining.length === 0) return null;
+
+  // Bốc ngẫu nhiên
+  const randomIndex = Math.floor(Math.random() * remaining.length);
+  const pickedNumber = remaining[randomIndex];
+
+  const updates = {};
+  updates[`rooms/${roomId}/gameState/calledNumbers`] = [pickedNumber, ...calledNumbers];
+  
+  if (newTurnIndex !== null) {
+    updates[`rooms/${roomId}/gameState/currentTurnIndex`] = newTurnIndex;
+  }
+
+  await database.ref().update(updates);
+
+  return pickedNumber;
 };
 
 // 6. Update Player Progress
@@ -144,7 +182,67 @@ export const updateTheme = async (roomId, theme) => {
   await themeRef.set(theme);
 };
 
-// 11. Xóa phòng (Chủ phòng thoát)
+// 11. Khoá / Mở khoá phòng (Chỉ Host)
+export const toggleRoomLock = async (roomId, isLocked) => {
+  const lockRef = database.ref(`rooms/${roomId}/settings/isLocked`);
+  await lockRef.set(isLocked);
+};
+
+// 12. Xóa phòng (Chủ phòng thoát)
 export const deleteRoom = async (roomId) => {
   await database.ref(`rooms/${roomId}`).remove();
+};
+
+// 12. Lấy danh sách các phòng đang online & Cronjob dọn rác
+export const getOnlineRooms = (callback) => {
+  const roomsRef = database.ref('rooms');
+  
+  const handleData = (snapshot) => {
+    if (!snapshot.exists()) {
+      callback([]);
+      return;
+    }
+    
+    const roomsObj = snapshot.val();
+    const roomsList = [];
+    const now = Date.now();
+    const FIVE_MINUTES = 5 * 60 * 1000;
+
+    Object.entries(roomsObj).forEach(([id, data]) => {
+      // Logic dọn rác (Cronjob frontend): 
+      // Xoá phòng nếu status là waiting VÀ đã tạo quá 5 phút
+      const isWaiting = data.gameState?.status === 'waiting';
+      const createdAt = data.createdAt || 0; // fallback cho các phòng cũ
+      
+      if (isWaiting && createdAt > 0 && now - createdAt > FIVE_MINUTES) {
+        // Thực hiện xóa phòng âm thầm
+        deleteRoom(id).catch(console.error);
+        return; // Không đẩy vào list hiển thị nữa
+      }
+
+      roomsList.push({
+        id,
+        name: data.settings?.roomName || `Phòng ${id}`,
+        players: data.players ? Object.keys(data.players).length : 0,
+        maxPlayers: 10,
+        status: data.gameState?.status || 'waiting',
+        isLocked: data.settings?.isLocked || false
+      });
+    });
+    
+    // Ưu tiên hiển thị phòng đang chờ lên đầu
+    roomsList.sort((a, b) => {
+      if (a.status === 'waiting' && b.status !== 'waiting') return -1;
+      if (a.status !== 'waiting' && b.status === 'waiting') return 1;
+      return 0;
+    });
+
+    callback(roomsList);
+  };
+
+  roomsRef.on('value', handleData);
+
+  return () => {
+    roomsRef.off('value', handleData);
+  };
 };

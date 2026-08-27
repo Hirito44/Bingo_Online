@@ -3,7 +3,7 @@ import { BingoCell } from './BingoCell';
 import './BingoBoard.css';
 
 export const BingoBoard = ({ board, rows, cols, theme = 'classic', onCellSelect, winningLines = [], latestCalledNumber }) => {
-  
+
   // Helper to determine which strike types apply to a given cell id
   const getStrikeTypes = (cellId) => {
     const types = [];
@@ -16,7 +16,7 @@ export const BingoBoard = ({ board, rows, cols, theme = 'classic', onCellSelect,
   };
 
   return (
-    <div 
+    <div
       className={`bingo-board theme-${theme}`}
       style={{
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
@@ -28,10 +28,10 @@ export const BingoBoard = ({ board, rows, cols, theme = 'classic', onCellSelect,
         const isSuggested = cell.value === latestCalledNumber && !cell.selected;
 
         return (
-          <BingoCell 
-            key={cell.id} 
-            cell={cell} 
-            onSelect={() => onCellSelect(cell.id)} 
+          <BingoCell
+            key={cell.id}
+            cell={cell}
+            onSelect={() => onCellSelect(cell.id)}
             strikeTypes={cellStrikes}
             isSuggested={isSuggested}
           />

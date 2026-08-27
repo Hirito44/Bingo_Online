@@ -16,9 +16,9 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
   useEffect(() => {
     // Generate initial board on mount based on shared pool
     if (roomData?.sharedPool && board.length === 0) {
-      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool));
+      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool, roomData.settings.gameMode));
     }
-  }, [roomData?.sharedPool, rows, cols, board.length, setBoard]);
+  }, [roomData?.sharedPool, rows, cols, board.length, setBoard, roomData?.settings?.gameMode]);
 
   const handleKickPlayer = async (playerId) => {
     if (isHost && playerId !== myPlayerId) {
@@ -32,7 +32,7 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
 
   const handleShuffleBoard = () => {
     if (roomData?.sharedPool) {
-      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool));
+      setBoard(generateBingoBoard(rows, cols, roomData.sharedPool, roomData.settings.gameMode));
     }
   };
 
@@ -61,8 +61,8 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
       <Card className="waiting-card">
         <div className="waiting-header">
           <h2 className="room-title">{roomData?.settings.roomName || 'SẢNH CHỜ'}</h2>
-          <div 
-            className="room-id-box clickable" 
+          <div
+            className="room-id-box clickable"
             onClick={handleCopyCode}
             title="Nhấn để Copy"
           >
@@ -74,24 +74,24 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
             {copied && <span className="copy-tooltip">Đã Copy!</span>}
           </div>
           <p className="instruction">Hãy gửi mã này cho bạn bè để họ cùng tham gia!</p>
-          
+
           {isHost && (
             <div className="host-theme-selector">
               <label>ĐỔI GIAO DIỆN:</label>
               <div className="theme-pills">
-                <button 
+                <button
                   className={`theme-pill ${roomData?.settings?.theme === 'classic' || !roomData?.settings?.theme ? 'active' : ''}`}
                   onClick={() => handleThemeChange('classic')}
                 >
                   🪵 Hội Làng
                 </button>
-                <button 
+                <button
                   className={`theme-pill ${roomData?.settings?.theme === 'ocean' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('ocean')}
                 >
                   🌊 Biển Cả
                 </button>
-                <button 
+                <button
                   className={`theme-pill ${roomData?.settings?.theme === 'tet' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('tet')}
                 >
@@ -115,8 +115,8 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
                     {p.isHost && <span className="host-badge">Chủ bàn</span>}
                   </div>
                   {isHost && p.id !== myPlayerId && (
-                    <button 
-                      className="btn-kick" 
+                    <button
+                      className="btn-kick"
                       onClick={() => handleKickPlayer(p.id)}
                       title="Đuổi khỏi phòng"
                     >
@@ -137,7 +137,7 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
           <div className="personal-board-setup">
             <h3 className="list-heading">BẢNG CỦA BẠN</h3>
             <p className="setup-hint">Bấm "Xáo trộn" để đổi vị trí các số (Bộ số của mọi người là giống nhau)</p>
-            
+
             <div className="setup-actions">
               <Button onClick={handleShuffleBoard} variant="secondary" className="btn-shuffle">
                 🎲 XÁO TRỘN VỊ TRÍ
@@ -146,14 +146,14 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
 
             <div className="preview-board-wrapper">
               {board.length > 0 ? (
-                <BingoBoard 
-                  board={board} 
-                  rows={rows} 
+                <BingoBoard
+                  board={board}
+                  rows={rows}
                   cols={cols}
                   theme={roomData?.settings?.theme || 'classic'}
                 />
               ) : (
-                <div style={{textAlign: 'center', padding: '2rem'}}>Đang tải bảng...</div>
+                <div style={{ textAlign: 'center', padding: '2rem' }}>Đang tải bảng...</div>
               )}
             </div>
           </div>
@@ -161,6 +161,13 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
 
         {isHost ? (
           <div className="host-actions">
+            <Button 
+              onClick={() => roomService.toggleRoomLock(roomId, !roomData.settings.isLocked)} 
+              variant="secondary" 
+              className={`btn-lock ${roomData.settings.isLocked ? 'locked' : ''}`}
+            >
+              {roomData.settings.isLocked ? '🔓 MỞ KHOÁ PHÒNG' : '🔒 KHOÁ PHÒNG'}
+            </Button>
             <Button onClick={() => onStart()} variant="primary" className="btn-start-game">
               BẮT ĐẦU CHƠI ({players.length} NGƯỜI)
             </Button>

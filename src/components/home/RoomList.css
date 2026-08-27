@@ -117,6 +117,12 @@
   border: 2px solid #C62828;
 }
 
+.status-badge.locked {
+  background: #FFF3E0;
+  color: #E65100;
+  border: 2px solid #E65100;
+}
+
 .join-btn {
   min-width: 120px;
   font-family: 'Playfair Display', serif;
@@ -142,4 +148,13 @@
     justify-content: space-between;
     margin-bottom: 0.5rem;
   }
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 2rem;
+  font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
