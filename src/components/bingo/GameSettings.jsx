@@ -11,16 +11,23 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!roomName.trim()) {
+    const parsedSize = parseInt(size, 10);
+    const parsedLines = parseInt(requiredLines, 10);
+
+    if (!roomName || !roomName.trim()) {
       setAlertMsg("Vui lòng nhập Tên Bàn Chơi!");
       return;
     }
-    if (size >= 3 && size <= 10 && requiredLines > 0) {
-      // Truyền thêm roomName
-      onStartGame(roomName.trim(), Number(size), Number(size), Number(requiredLines), 'classic');
-    } else {
-      setAlertMsg("Vui lòng nhập cấu hình hợp lệ (Kích thước 3-10)!");
+    if (isNaN(parsedSize) || parsedSize < 3 || parsedSize > 10) {
+      setAlertMsg("Kích thước bảng phải từ 3 đến 10!");
+      return;
     }
+    if (isNaN(parsedLines) || parsedLines < 1 || parsedLines > parsedSize) {
+      setAlertMsg(`Số xiên để thắng phải từ 1 đến ${parsedSize}!`);
+      return;
+    }
+
+    onStartGame(roomName.trim(), parsedSize, parsedSize, parsedLines, 'classic');
   };
 
   return (
@@ -52,7 +59,7 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
           <Input 
             label="SỐ XIÊN ĐỂ THẮNG" 
             type="number" 
-            min="1" max={Number(size) + 2} 
+            min="1" max={size} 
             value={requiredLines} 
             onChange={(e) => setRequiredLines(e.target.value)} 
             className="glass-input"
