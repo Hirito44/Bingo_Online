@@ -6,6 +6,12 @@
   align-items: center;
 }
 
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.5rem;
+  }
+}
+
 .mini-header {
   width: 100%;
   padding: 1rem 0;
@@ -371,7 +377,9 @@
     flex-direction: column;
     align-items: center;
   }
-  
+  .board-section {
+    width: 100%;
+  }
   .players-progress-section {
     width: 100%;
     max-width: 600px;
