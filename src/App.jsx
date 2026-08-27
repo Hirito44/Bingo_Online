@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { GameHub } from './components/home/GameHub';
-import { LotoMenu } from './components/home/LotoMenu';
+import { HomeMenu } from './components/home/HomeMenu';
 import { RoomList } from './components/home/RoomList';
 import { WaitingRoom } from './components/home/WaitingRoom';
 import { GameSettings } from './components/bingo/GameSettings';
@@ -13,8 +11,6 @@ import { playClickSound, playSlashSound, playWinSound } from './utils/audio';
 import './App.css';
 
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const [view, setView] = useState(() => sessionStorage.getItem('view') || 'home');
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('playerName') || '');
   const [avatar, setAvatar] = useState(() => sessionStorage.getItem('avatar') || '/avatars/teu.png');
@@ -41,13 +37,14 @@ function App() {
 
   // Lưu trữ Session Storage
   useEffect(() => {
+    sessionStorage.setItem('view', view);
     sessionStorage.setItem('playerName', playerName);
     sessionStorage.setItem('avatar', avatar);
     sessionStorage.setItem('myPlayerId', myPlayerId);
     sessionStorage.setItem('currentRoomId', currentRoomId);
     sessionStorage.setItem('board', JSON.stringify(board));
     sessionStorage.setItem('winningData', JSON.stringify(winningData));
-  }, [playerName, avatar, myPlayerId, currentRoomId, board, winningData]);
+  }, [view, playerName, avatar, myPlayerId, currentRoomId, board, winningData]);
 
   // Quản lý trạng thái kết nối Firebase (Tối ưu connections)
   useEffect(() => {
@@ -87,14 +84,16 @@ function App() {
           setRoomData(data);
 
           // Lắng nghe chuyển trạng thái
-          if (data.gameState.status === 'playing' && roomData?.gameState?.status !== 'playing') {
+          if (data.gameState.status === 'playing' && view !== 'playing') {
+            setView('playing');
             // Chỉ reset nếu từ sảnh chờ vào
-            if (roomData?.gameState?.status === 'waiting' || !roomData) {
+            if (view === 'waiting-room') {
               setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
             }
           }
-          if (data.gameState.status === 'waiting' && roomData?.gameState?.status !== 'waiting') {
-            if (roomData?.gameState?.status === 'playing') {
+          if (data.gameState.status === 'waiting' && view !== 'waiting-room') {
+            setView('waiting-room');
+            if (view === 'playing') {
               setBoard([]); // reset board
               setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
             }
@@ -109,11 +108,11 @@ function App() {
       });
       return () => unsubscribe();
     }
-  }, [currentRoomId, roomData?.gameState?.status]);
+  }, [currentRoomId, view]);
 
   // Sync my lines to server when I win or lines increase
   useEffect(() => {
-    if (roomData?.gameState?.status === 'playing' && roomData && currentRoomId) {
+    if (view === 'playing' && roomData && currentRoomId) {
       const myData = roomData.players[myPlayerId];
       if (myData && myData.lines !== winningData.currentLines) {
         roomService.updatePlayerLines(currentRoomId, myPlayerId, winningData.currentLines);
@@ -122,7 +121,7 @@ function App() {
         }
       }
     }
-  }, [winningData.currentLines, winningData.isWin, roomData?.gameState?.status, currentRoomId, roomData, myPlayerId, playerName]);
+  }, [winningData.currentLines, winningData.isWin, view, currentRoomId, roomData, myPlayerId, playerName]);
 
   // Derived States
   const isHost = roomData?.players[myPlayerId]?.isHost || false;
@@ -137,8 +136,8 @@ function App() {
       setAlertMsg("Vui lòng nhập Danh xưng của bạn trước khi vào chơi nhé!");
       return;
     }
-    if (mode === 'online') navigate('/loto/rooms');
-    if (mode === 'create') navigate('/loto/create');
+    if (mode === 'online') setView('room-list-online');
+    if (mode === 'create') setView('create-room');
   };
 
   const handleJoinRoomById = async (id) => {
@@ -149,7 +148,7 @@ function App() {
     try {
       await roomService.joinRoom(id, { id: myPlayerId, name: playerName, avatar });
       setCurrentRoomId(id);
-      navigate(`/loto/room/${id}`);
+      setView('waiting-room');
     } catch (err) {
       if (err.message === 'RoomNotFound') {
         setAlertMsg("Phòng không tồn tại!");
@@ -177,7 +176,7 @@ function App() {
     );
 
     setCurrentRoomId(newRoomId);
-    navigate(`/loto/room/${newRoomId}`);
+    setView('waiting-room');
   };
 
   const handleStartGame = async () => {
@@ -190,7 +189,7 @@ function App() {
   };
 
   const handleCellSelect = async (id) => {
-    if (roomData?.gameState?.status !== 'playing' || winningData.isWin || roomData?.gameState.winner) return;
+    if (view !== 'playing' || winningData.isWin || roomData?.gameState.winner) return;
 
     const gameMode = roomData?.settings.gameMode || 'classic';
 
@@ -272,12 +271,12 @@ function App() {
         roomService.removePlayer(currentRoomId, myPlayerId);
       }
     }
-    navigate('/loto');
+    setView('home');
     setBoard([]);
     setWinningData({ isWin: false, currentLines: 0, winningLines: [] });
     setCurrentRoomId('');
     setRoomData(null);
-    sessionStorage.removeItem('currentRoomId'); // Clear room from session
+    sessionStorage.clear(); // Xóa sạch session khi cố tình rời bàn
 
     // Reset cờ sau khi xử lý xong để lần chơi sau bình thường
     setTimeout(() => {
@@ -303,183 +302,169 @@ function App() {
         {isSoundEnabled ? '🔊' : '🔇'}
       </button>
 
-      {location.pathname !== '/' && (
-        <header className="mini-header" onClick={() => handleBackToHome()}>
-          <img src="/favicon.png" alt="Logo Lô Tô" className="folk-logo-mini" />
+      {view !== 'home' && (
+        <header className="mini-header" onClick={handleBackToHome}>
           <span className="logo-text">HỘI LÔ TÔ</span>
         </header>
       )}
 
       <main className="app-main">
-        <Routes>
-          <Route path="/" element={
-            <GameHub
-              playerName={playerName}
-              setPlayerName={setPlayerName}
-              setAlertMsg={setAlertMsg}
-              avatar={avatar}
-              setAvatar={setAvatar}
-            />
-          } />
-          
-          <Route path="/loto" element={
-            <LotoMenu
-              onSelectMode={handleSelectMode}
-              onJoinRoomById={handleJoinRoomById}
-              setAlertMsg={setAlertMsg}
-            />
-          } />
+        {view === 'home' && (
+          <HomeMenu
+            onSelectMode={handleSelectMode}
+            onJoinRoomById={handleJoinRoomById}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            setAlertMsg={setAlertMsg}
+            avatar={avatar}
+            setAvatar={setAvatar}
+          />
+        )}
 
-          <Route path="/loto/rooms" element={
-            <RoomList type="online" onBack={handleBackToHome} onJoinRoom={handleJoinRoomById} />
-          } />
 
-          <Route path="/loto/create" element={
-            <GameSettings
-              onStartGame={handleCreateRoomDone}
-              onBack={handleBackToHome}
-              setAlertMsg={setAlertMsg}
-              playerName={playerName}
-            />
-          } />
 
-          <Route path="/loto/room/:roomId" element={
-            roomData ? (
-              roomData.gameState.status === 'waiting' ? (
-                <WaitingRoom
-                  roomId={currentRoomId}
-                  roomData={roomData}
-                  myPlayerId={myPlayerId}
-                  onStart={handleStartGame}
-                  onBack={handleBackToHome}
-                  setAlertMsg={setAlertMsg}
-                  board={board}
-                  setBoard={setBoard}
-                />
-              ) : (
-                <div className="game-area fade-in">
-                  <div className="calling-section">
-                    {roomData.settings.gameMode === 'standard' ? (
-                      <div className="turn-indicator standard-mode">
-                        {(roomData.settings.drawMode === 'turnBased' ? isMyTurn : isHost) ? (
-                          <button
-                            className="draw-number-btn"
-                            onClick={() => roomService.drawRandomNumber(currentRoomId, roomData.settings.drawMode === 'turnBased' ? (currentTurnIndex + 1) % turnOrder.length : currentTurnIndex)}
-                            disabled={winningData.isWin || roomData.gameState.winner}
-                          >
-                            🎲 BỐC SỐ
-                          </button>
-                        ) : (
-                          <span className="waiting-host">
-                            {roomData.settings.drawMode === 'turnBased'
-                              ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...`
-                              : "Đang đợi Chủ Bàn bốc số..."}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
-                        {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
-                      </div>
-                    )}
+        {view === 'room-list-online' && (
+          <RoomList type="online" onBack={handleBackToHome} onJoinRoom={handleJoinRoomById} />
+        )}
 
-                    <div className="called-history">
-                      <span className="history-label">ĐÃ HÔ:</span>
-                      <div className="history-numbers">
-                        {calledNumbers.map((n, i) => (
-                          <span key={i} className={`called-chip ${i === 0 ? 'latest' : ''}`}>{n}</span>
-                        ))}
-                        {calledNumbers.length === 0 && <span className="no-calls">Trận đấu bắt đầu!</span>}
-                      </div>
-                    </div>
-                  </div>
+        {view === 'create-room' && (
+          <GameSettings
+            onStartGame={handleCreateRoomDone}
+            onBack={handleBackToHome}
+            setAlertMsg={setAlertMsg}
+            playerName={playerName}
+          />
+        )}
 
-                  <div className="game-status-bar">
-                    <div className="status-item">
-                      <span className="label">TIẾN ĐỘ CỦA BẠN:</span>
-                      <span className="value text-primary">{winningData.currentLines} / {requiredLines} XIÊN</span>
-                    </div>
-                  </div>
+        {view === 'waiting-room' && roomData && (
+          <WaitingRoom
+            roomId={currentRoomId}
+            roomData={roomData}
+            myPlayerId={myPlayerId}
+            onStart={handleStartGame}
+            onBack={handleBackToHome}
+            setAlertMsg={setAlertMsg}
+            board={board}
+            setBoard={setBoard}
+          />
+        )}
 
-                  <div className="main-playing-grid">
-                    <div className="board-section">
-                      <BingoBoard
-                        board={board}
-                        rows={roomData.settings.rows}
-                        cols={roomData.settings.cols}
-                        theme={roomData.settings.theme || 'classic'}
-                        onCellSelect={handleCellSelect}
-                        winningLines={winningData.winningLines}
-                        latestCalledNumber={calledNumbers[0]}
-                      />
-                    </div>
-
-                    <div className="players-progress-section">
-                      <h3 className="progress-title">BẢNG PHONG THẦN</h3>
-                      <ul className="progress-list">
-                        {Object.entries(roomData.players)
-                          .sort(([, a], [, b]) => b.lines - a.lines)
-                          .map(([id, p]) => {
-                            const isMe = id === myPlayerId;
-                            const lines = p.lines;
-                            const isWinner = lines >= requiredLines;
-
-                            return (
-                              <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
-                                <div className="player-info">
-                                  <span className="player-avatar">
-                                    {isWinner ? '🏆' : (p.avatar ? <img src={p.avatar} alt="avatar" className="board-avatar" /> : (isMe ? '👤' : (p.isHost ? '👑' : '👻')))}
-                                  </span>
-                                  <span className="player-name">{p.name} {isMe && '(Bạn)'}</span>
-                                </div>
-                                <div className="player-score">
-                                  <span className="score-number">{lines}</span>
-                                  <span className="score-target">/{requiredLines} xiên</span>
-                                </div>
-                              </li>
-                            );
-                          })}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="action-bar">
-                    <Button onClick={() => handleBackToHome()} variant="secondary">
-                      THOÁT BÀN
-                    </Button>
-                  </div>
-
-                  {/* Modal Chiến Thắng */}
-                  {(winningData.isWin || roomData.gameState.winner) && (
-                    <div className="victory-modal-overlay">
-                      <div className="victory-modal">
-                        <h1 className="victory-title">TỚI TRẮNG !</h1>
-                        <p className="victory-subtitle">
-                          {roomData.gameState.winner === playerName
-                            ? `Chúc mừng bạn đã trúng đủ ${requiredLines} xiên!`
-                            : `Người chơi ${roomData.gameState.winner} đã tới trắng trước!`}
-                        </p>
-                        <div className="victory-actions">
-                          {isHost ? (
-                            <Button onClick={handlePlayAgain} variant="primary">CHƠI VÁN MỚI</Button>
-                          ) : (
-                            <p>Đang chờ chủ phòng chơi lại...</p>
-                          )}
-                          <Button onClick={handleBackToHome} variant="secondary">VỀ SẢNH CHÍNH</Button>
-                        </div>
-                      </div>
-                    </div>
+        {view === 'playing' && roomData && (
+          <div className="game-area fade-in">
+            <div className="calling-section">
+              {roomData.settings.gameMode === 'standard' ? (
+                <div className="turn-indicator standard-mode">
+                  {(roomData.settings.drawMode === 'turnBased' ? isMyTurn : isHost) ? (
+                    <button
+                      className="draw-number-btn"
+                      onClick={() => roomService.drawRandomNumber(currentRoomId, roomData.settings.drawMode === 'turnBased' ? (currentTurnIndex + 1) % turnOrder.length : currentTurnIndex)}
+                      disabled={winningData.isWin || roomData.gameState.winner}
+                    >
+                      🎲 BỐC SỐ
+                    </button>
+                  ) : (
+                    <span className="waiting-host">
+                      {roomData.settings.drawMode === 'turnBased'
+                        ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...`
+                        : "Đang đợi Chủ Bàn bốc số..."}
+                    </span>
                   )}
                 </div>
-              )
-            ) : (
-              <div className="guest-waiting" style={{padding: '3rem'}}>
-                <div className="spinner"></div>
-                <p>Đang tải dữ liệu phòng...</p>
+              ) : (
+                <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
+                  {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
+                </div>
+              )}
+
+              <div className="called-history">
+                <span className="history-label">ĐÃ HÔ:</span>
+                <div className="history-numbers">
+                  {calledNumbers.map((n, i) => (
+                    <span key={i} className={`called-chip ${i === 0 ? 'latest' : ''}`}>{n}</span>
+                  ))}
+                  {calledNumbers.length === 0 && <span className="no-calls">Trận đấu bắt đầu!</span>}
+                </div>
               </div>
-            )
-          } />
-        </Routes>
+            </div>
+
+            <div className="game-status-bar">
+              <div className="status-item">
+                <span className="label">TIẾN ĐỘ CỦA BẠN:</span>
+                <span className="value text-primary">{winningData.currentLines} / {requiredLines} XIÊN</span>
+              </div>
+            </div>
+
+            <div className="main-playing-grid">
+              <div className="board-section">
+                <BingoBoard
+                  board={board}
+                  rows={roomData.settings.rows}
+                  cols={roomData.settings.cols}
+                  theme={roomData.settings.theme || 'classic'}
+                  onCellSelect={handleCellSelect}
+                  winningLines={winningData.winningLines}
+                  latestCalledNumber={calledNumbers[0]}
+                />
+              </div>
+
+              <div className="players-progress-section">
+                <h3 className="progress-title">BẢNG PHONG THẦN</h3>
+                <ul className="progress-list">
+                  {Object.entries(roomData.players)
+                    .sort(([, a], [, b]) => b.lines - a.lines)
+                    .map(([id, p]) => {
+                      const isMe = id === myPlayerId;
+                      const lines = p.lines;
+                      const isWinner = lines >= requiredLines;
+
+                      return (
+                        <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
+                          <div className="player-info">
+                            <span className="player-avatar">
+                              {isWinner ? '🏆' : (p.avatar ? <img src={p.avatar} alt="avatar" className="board-avatar" /> : (isMe ? '👤' : (p.isHost ? '👑' : '👻')))}
+                            </span>
+                            <span className="player-name">{p.name} {isMe && '(Bạn)'}</span>
+                          </div>
+                          <div className="player-score">
+                            <span className="score-number">{lines}</span>
+                            <span className="score-target">/{requiredLines} xiên</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            </div>
+
+            <div className="action-bar">
+              <Button onClick={() => handleBackToHome()} variant="secondary">
+                THOÁT BÀN
+              </Button>
+            </div>
+
+            {/* Modal Chiến Thắng */}
+            {(winningData.isWin || roomData.gameState.winner) && (
+              <div className="victory-modal-overlay">
+                <div className="victory-modal">
+                  <h1 className="victory-title">TỚI TRẮNG !</h1>
+                  <p className="victory-subtitle">
+                    {roomData.gameState.winner === playerName
+                      ? `Chúc mừng bạn đã trúng đủ ${requiredLines} xiên!`
+                      : `Người chơi ${roomData.gameState.winner} đã tới trắng trước!`}
+                  </p>
+                  <div className="victory-actions">
+                    {isHost ? (
+                      <Button onClick={handlePlayAgain} variant="primary">CHƠI VÁN MỚI</Button>
+                    ) : (
+                      <p>Đang chờ chủ phòng chơi lại...</p>
+                    )}
+                    <Button onClick={handleBackToHome} variant="secondary">VỀ SẢNH CHÍNH</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {alertMsg && (
           <div className="alert-modal-overlay">
