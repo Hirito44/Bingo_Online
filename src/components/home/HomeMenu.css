@@ -247,3 +247,83 @@
     padding: 0.75rem;
   }
 }
+
+/* GAME HUB STYLES */
+.hub-card {
+  max-width: 550px;
+}
+
+.game-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.game-card {
+  background: var(--bg-main);
+  border: 2px solid var(--text-primary);
+  border-radius: 8px;
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(62, 39, 35, 0.3);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.game-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 6px 6px 0px var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.game-card.disabled {
+  opacity: 0.6;
+  filter: grayscale(60%);
+}
+
+.game-card.disabled:hover {
+  transform: scale(1.05);
+  box-shadow: 4px 4px 0px rgba(62, 39, 35, 0.3);
+  border-color: var(--text-primary);
+}
+
+.game-card-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 20%;
+  object-fit: cover;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  border: 1px solid var(--text-muted);
+}
+
+.game-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 500px) {
+  .game-hub-grid {
+    grid-template-columns: 1fr;
+  }
+  .game-card {
+    flex-direction: row;
+    padding: 0.75rem;
+    justify-content: flex-start;
+  }
+  .game-card-logo {
+    width: 60px;
+    height: 60px;
+  }
+  .game-card-title {
+    font-size: 1.3rem;
+    margin-left: 1rem;
+  }
+}
