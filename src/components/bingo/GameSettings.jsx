@@ -9,24 +9,31 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
   const [size, setSize] = useState(5);
   const [requiredLines, setRequiredLines] = useState(1);
 
+  const [errors, setErrors] = useState({});
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const parsedSize = Number(size);
     const parsedLines = Number(requiredLines);
+    
+    let newErrors = {};
 
     if (!roomName || !roomName.trim()) {
-      setAlertMsg("Vui lòng nhập Tên Bàn Chơi!");
-      return;
+      newErrors.roomName = "Vui lòng nhập Tên Bàn Chơi!";
     }
     if (!Number.isInteger(parsedSize) || parsedSize < 3 || parsedSize > 10) {
-      setAlertMsg("Kích thước bảng phải là số nguyên từ 3 đến 10!");
-      return;
+      newErrors.size = "Kích thước bảng phải là số nguyên từ 3 đến 10!";
     }
     if (!Number.isInteger(parsedLines) || parsedLines < 1 || parsedLines > parsedSize) {
-      setAlertMsg(`Số xiên để thắng phải là số nguyên từ 1 đến ${parsedSize}!`);
+      newErrors.requiredLines = `Số xiên để thắng phải là số nguyên từ 1 đến ${parsedSize || 5}!`;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setErrors({});
     onStartGame(roomName.trim(), parsedSize, parsedSize, parsedLines, 'classic');
   };
 
@@ -43,8 +50,9 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
             type="text" 
             placeholder="VD: Hội Lô Tô Xóm Chùa"
             value={roomName} 
-            onChange={(e) => setRoomName(e.target.value)} 
+            onChange={(e) => { setRoomName(e.target.value); setErrors({...errors, roomName: ''}); }} 
             className="glass-input"
+            error={errors.roomName}
           />
 
           <Input 
@@ -52,8 +60,9 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
             type="number" 
             min="3" max="10" 
             value={size} 
-            onChange={(e) => setSize(e.target.value)} 
+            onChange={(e) => { setSize(e.target.value); setErrors({...errors, size: ''}); }} 
             className="glass-input"
+            error={errors.size}
           />
           
           <Input 
@@ -61,8 +70,9 @@ export const GameSettings = ({ onStartGame, onBack, setAlertMsg, playerName }) =
             type="number" 
             min="1" max={size} 
             value={requiredLines} 
-            onChange={(e) => setRequiredLines(e.target.value)} 
+            onChange={(e) => { setRequiredLines(e.target.value); setErrors({...errors, requiredLines: ''}); }} 
             className="glass-input"
+            error={errors.requiredLines}
           />
           
           <Button type="submit" variant="primary" className="start-btn">
