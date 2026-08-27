@@ -148,6 +148,21 @@
     justify-content: space-between;
     margin-bottom: 0.5rem;
   }
+  .header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .header-bar button {
+    align-self: flex-start;
+  }
+  .list-title {
+    text-align: center;
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .list-card {
+    padding: 1rem !important;
+  }
 }
 
 .loading-state, .empty-state {

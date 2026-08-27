@@ -25,7 +25,7 @@ export const RoomList = ({ type, onBack, onJoinRoom }) => {
       <div className="header-bar">
         <Button variant="secondary" onClick={onBack}>⬅ QUAY LẠI</Button>
         <h2 className="list-title">
-          {type === 'lan' ? 'PHÒNG TRONG MẠNG LAN' : 'PHÒNG ONLINE PUBLIC'}
+          {type === 'lan' ? 'PHÒNG TRONG MẠNG LAN' : 'DANH SÁCH BÀN THIÊN HẠ'}
         </h2>
       </div>
 
