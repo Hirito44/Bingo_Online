@@ -15,10 +15,20 @@
 .mini-header {
   width: 100%;
   padding: 1rem 0;
-  text-align: center;
   cursor: pointer;
   margin-bottom: 1rem;
   border-bottom: 2px solid var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.folk-logo-mini {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  box-shadow: 2px 2px 0px rgba(62, 39, 35, 0.4);
 }
 
 .logo-text {

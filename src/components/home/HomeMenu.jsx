@@ -19,6 +19,7 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerNa
   return (
     <div className="home-menu-container">
       <div className="title-wrapper">
+        <img src="/favicon.png" alt="Logo Lô Tô" className="folk-logo-large" />
         <h1 className="folk-title">HỘI LÔ TÔ</h1>
         <p className="folk-subtitle">Đầu làng cuối xóm, vui chơi có thưởng</p>
       </div>

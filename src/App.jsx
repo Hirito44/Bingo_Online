@@ -302,6 +302,7 @@ function App() {
 
       {view !== 'home' && (
         <header className="mini-header" onClick={handleBackToHome}>
+          <img src="/favicon.png" alt="Logo Lô Tô" className="folk-logo-mini" />
           <span className="logo-text">HỘI LÔ TÔ</span>
         </header>
       )}
