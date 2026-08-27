@@ -11,10 +11,10 @@ import { playClickSound, playSlashSound, playWinSound } from './utils/audio';
 import './App.css';
 
 function App() {
-  const [view, setView] = useState(() => sessionStorage.getItem('view') || 'home'); 
+  const [view, setView] = useState(() => sessionStorage.getItem('view') || 'home');
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('playerName') || '');
   const [alertMsg, setAlertMsg] = useState('');
-  
+
   const [myPlayerId] = useState(() => sessionStorage.getItem('myPlayerId') || Date.now().toString());
   const [currentRoomId, setCurrentRoomId] = useState(() => sessionStorage.getItem('currentRoomId') || '');
   const [roomData, setRoomData] = useState(null);
@@ -59,7 +59,7 @@ function App() {
           }
 
           setRoomData(data);
-          
+
           // Lắng nghe chuyển trạng thái
           if (data.gameState.status === 'playing' && view !== 'playing') {
             setView('playing');
@@ -113,7 +113,6 @@ function App() {
       setAlertMsg("Vui lòng nhập Danh xưng của bạn trước khi vào chơi nhé!");
       return;
     }
-    if (mode === 'lan') setView('room-list-lan');
     if (mode === 'online') setView('room-list-online');
     if (mode === 'create') setView('create-room');
   };
@@ -132,25 +131,27 @@ function App() {
         setAlertMsg("Phòng không tồn tại!");
       } else if (err.message === 'RoomAlreadyPlaying') {
         setAlertMsg("Phòng này đang trong ván chơi!");
+      } else if (err.message === 'RoomIsLocked') {
+        setAlertMsg("Phòng đã bị khoá bởi Chủ bàn, không thể tham gia!");
       } else {
         setAlertMsg("Có lỗi xảy ra khi vào phòng: " + err.message);
       }
     }
   };
 
-  const handleCreateRoomDone = async (roomName, rows, cols, reqLines, mode) => {
+  const handleCreateRoomDone = async (roomName, rows, cols, reqLines, mode, drawMode) => {
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
+
     // Sinh tập số chung ngay lúc tạo phòng
     const pool = generateSharedPool(rows * cols, mode);
-    
+
     await roomService.createRoom(
       newRoomId,
-      { rows, cols, requiredLines: reqLines, roomName, theme: 'classic', gameMode: mode || 'classic' },
+      { rows, cols, requiredLines: reqLines, roomName, theme: 'classic', gameMode: mode || 'classic', drawMode: drawMode || 'hostOnly' },
       { id: myPlayerId, name: playerName },
       pool
     );
-    
+
     setCurrentRoomId(newRoomId);
     setView('waiting-room');
   };
@@ -166,7 +167,7 @@ function App() {
 
   const handleCellSelect = async (id) => {
     if (view !== 'playing' || winningData.isWin || roomData?.gameState.winner) return;
-    
+
     const gameMode = roomData?.settings.gameMode || 'classic';
 
     const cell = board.find(c => c.id === id);
@@ -177,11 +178,11 @@ function App() {
         if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
-        
+
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
-        
+
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
       } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
         setAlertMsg("Số này chưa được gọi!");
@@ -195,13 +196,13 @@ function App() {
         if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
-        
+
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
-        
+
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
-        
+
         // Gọi lên server
         await roomService.callNumber(currentRoomId, cell.value, (currentTurnIndex + 1) % turnOrder.length);
       } else if (!cell.selected && calledNumbers.includes(cell.value)) {
@@ -209,11 +210,11 @@ function App() {
         if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
-        
+
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
-        
+
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
       }
     } else {
@@ -221,11 +222,11 @@ function App() {
         if (isSoundEnabled) playClickSound();
         const newBoard = board.map(c => c.id === id ? { ...c, selected: true } : c);
         setBoard(newBoard);
-        
+
         const winResult = checkWinCondition(newBoard, roomData.settings.rows, roomData.settings.cols, requiredLines, gameMode);
         if (isSoundEnabled && winResult.currentLines > winningData.currentLines && !winResult.isWin) playSlashSound();
         if (isSoundEnabled && winResult.isWin && !winningData.isWin) playWinSound();
-        
+
         setWinningData({ isWin: winResult.isWin, currentLines: winResult.currentLines, winningLines: winResult.winningLines });
       } else if (!cell.selected && !calledNumbers.includes(cell.value)) {
         setAlertMsg("Chưa đến lượt của bạn, không được tự ý Hô số!");
@@ -253,7 +254,7 @@ function App() {
     setCurrentRoomId('');
     setRoomData(null);
     sessionStorage.clear(); // Xóa sạch session khi cố tình rời bàn
-    
+
     // Reset cờ sau khi xử lý xong để lần chơi sau bình thường
     setTimeout(() => {
       isLeavingRef.current = false;
@@ -264,14 +265,14 @@ function App() {
     if (isHost) {
       roomService.playAgain(currentRoomId);
     } else {
-       setAlertMsg("Đang chờ chủ phòng chơi ván mới...");
+      setAlertMsg("Đang chờ chủ phòng chơi ván mới...");
     }
   };
 
   return (
     <div className="app-container">
-      <button 
-        className="sound-toggle-btn" 
+      <button
+        className="sound-toggle-btn"
         onClick={() => setIsSoundEnabled(!isSoundEnabled)}
         title={isSoundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
       >
@@ -286,39 +287,37 @@ function App() {
 
       <main className="app-main">
         {view === 'home' && (
-          <HomeMenu 
-            onSelectMode={handleSelectMode} 
-            onJoinRoomById={handleJoinRoomById} 
+          <HomeMenu
+            onSelectMode={handleSelectMode}
+            onJoinRoomById={handleJoinRoomById}
             playerName={playerName}
             setPlayerName={setPlayerName}
             setAlertMsg={setAlertMsg}
           />
         )}
 
-        {view === 'room-list-lan' && (
-          <RoomList type="lan" onBack={handleBackToHome} onJoinRoom={handleJoinRoomById} />
-        )}
+
 
         {view === 'room-list-online' && (
           <RoomList type="online" onBack={handleBackToHome} onJoinRoom={handleJoinRoomById} />
         )}
 
         {view === 'create-room' && (
-          <GameSettings 
-            onStartGame={handleCreateRoomDone} 
-            onBack={handleBackToHome} 
-            setAlertMsg={setAlertMsg} 
-            playerName={playerName} 
+          <GameSettings
+            onStartGame={handleCreateRoomDone}
+            onBack={handleBackToHome}
+            setAlertMsg={setAlertMsg}
+            playerName={playerName}
           />
         )}
 
         {view === 'waiting-room' && roomData && (
-          <WaitingRoom 
-            roomId={currentRoomId} 
+          <WaitingRoom
+            roomId={currentRoomId}
             roomData={roomData}
             myPlayerId={myPlayerId}
-            onStart={handleStartGame} 
-            onBack={handleBackToHome} 
+            onStart={handleStartGame}
+            onBack={handleBackToHome}
             setAlertMsg={setAlertMsg}
             board={board}
             setBoard={setBoard}
@@ -330,16 +329,20 @@ function App() {
             <div className="calling-section">
               {roomData.settings.gameMode === 'standard' ? (
                 <div className="turn-indicator standard-mode">
-                  {isHost ? (
-                    <button 
-                      className="draw-number-btn" 
-                      onClick={() => roomService.drawRandomNumber(currentRoomId)}
+                  {(roomData.settings.drawMode === 'turnBased' ? isMyTurn : isHost) ? (
+                    <button
+                      className="draw-number-btn"
+                      onClick={() => roomService.drawRandomNumber(currentRoomId, roomData.settings.drawMode === 'turnBased' ? (currentTurnIndex + 1) % turnOrder.length : currentTurnIndex)}
                       disabled={winningData.isWin || roomData.gameState.winner}
                     >
                       🎲 BỐC SỐ
                     </button>
                   ) : (
-                    <span className="waiting-host">Đang đợi Chủ Bàn bốc số...</span>
+                    <span className="waiting-host">
+                      {roomData.settings.drawMode === 'turnBased' 
+                        ? `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} bốc số...` 
+                        : "Đang đợi Chủ Bàn bốc số..."}
+                    </span>
                   )}
                 </div>
               ) : (
@@ -347,7 +350,7 @@ function App() {
                   {isMyTurn ? "TỚI LƯỢT BẠN: HÃY CHỌN 1 SỐ TRÊN BẢNG ĐỂ HÔ" : `Đang đợi ${roomData.players[turnOrder[currentTurnIndex]]?.name} hô số...`}
                 </div>
               )}
-              
+
               <div className="called-history">
                 <span className="history-label">ĐÃ HÔ:</span>
                 <div className="history-numbers">
@@ -368,26 +371,27 @@ function App() {
 
             <div className="main-playing-grid">
               <div className="board-section">
-                <BingoBoard 
-                  board={board} 
-                  rows={roomData.settings.rows} 
+                <BingoBoard
+                  board={board}
+                  rows={roomData.settings.rows}
                   cols={roomData.settings.cols}
                   theme={roomData.settings.theme || 'classic'}
-                  mode={roomData.settings.gameMode || 'classic'}
                   onCellSelect={handleCellSelect}
                   winningLines={winningData.winningLines}
                   latestCalledNumber={calledNumbers[0]}
                 />
               </div>
-              
+
               <div className="players-progress-section">
                 <h3 className="progress-title">BẢNG PHONG THẦN</h3>
                 <ul className="progress-list">
-                  {Object.entries(roomData.players).map(([id, p]) => {
+                  {Object.entries(roomData.players)
+                    .sort(([, a], [, b]) => b.lines - a.lines)
+                    .map(([id, p]) => {
                     const isMe = id === myPlayerId;
                     const lines = p.lines;
                     const isWinner = lines >= requiredLines;
-                    
+
                     return (
                       <li key={id} className={`progress-item ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}`}>
                         <div className="player-info">
@@ -404,21 +408,21 @@ function App() {
                 </ul>
               </div>
             </div>
-            
+
             <div className="action-bar">
               <Button onClick={() => handleBackToHome()} variant="secondary">
                 THOÁT BÀN
               </Button>
             </div>
-            
+
             {/* Modal Chiến Thắng */}
             {(winningData.isWin || roomData.gameState.winner) && (
               <div className="victory-modal-overlay">
                 <div className="victory-modal">
                   <h1 className="victory-title">TỚI TRẮNG !</h1>
                   <p className="victory-subtitle">
-                    {roomData.gameState.winner === playerName 
-                      ? `Chúc mừng bạn đã trúng đủ ${requiredLines} xiên!` 
+                    {roomData.gameState.winner === playerName
+                      ? `Chúc mừng bạn đã trúng đủ ${requiredLines} xiên!`
                       : `Người chơi ${roomData.gameState.winner} đã tới trắng trước!`}
                   </p>
                   <div className="victory-actions">

@@ -121,7 +121,7 @@
 }
 
 .empty-cell {
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: none;
   cursor: default;
@@ -129,5 +129,5 @@
 .empty-cell:hover, .empty-cell:hover:not(.selected) {
   transform: none;
   box-shadow: none;
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }

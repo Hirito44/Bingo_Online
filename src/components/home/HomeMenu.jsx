@@ -59,13 +59,7 @@ export const HomeMenu = ({ onSelectMode, onJoinRoomById, playerName, setPlayerNa
             <span className="divider-line"></span>
           </div>
           
-          <Button 
-            className="menu-btn btn-lan" 
-            onClick={() => onSelectMode('lan')}
-          >
-            TÌM BÀN XUNG QUANH (LAN)
-          </Button>
-          
+
           <Button 
             className="menu-btn btn-online" 
             onClick={() => onSelectMode('online')}

@@ -16,44 +16,52 @@ export const generateSharedPool = (totalCells, mode = 'classic') => {
 };
 
 export const generateStandardLotoTicket = () => {
-  const rows = 3;
-  const cols = 9;
-  const board = Array(rows * cols).fill(null);
+  const board = Array(81).fill(null); // 3 vé x 27 ô = 81 ô
 
-  // Mỗi hàng có chính xác 5 số
-  const rowColIndices = [[], [], []];
-  for (let r = 0; r < 3; r++) {
-    const availableCols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-    for (let i = 0; i < 5; i++) {
-      const randIdx = Math.floor(Math.random() * availableCols.length);
-      rowColIndices[r].push(availableCols[randIdx]);
-      availableCols.splice(randIdx, 1);
+  // Bể số cho 9 cột (đảm bảo không trùng số giữa 3 vé)
+  const colPools = Array.from({length: 9}, (_, c) => {
+    const min = c === 0 ? 1 : c * 10;
+    const max = c === 8 ? 90 : (c * 10 + 9);
+    const p = [];
+    for(let i = min; i <= max; i++) p.push(i);
+    // Shuffle
+    for (let i = p.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [p[i], p[j]] = [p[j], p[i]];
     }
-  }
+    return p;
+  });
 
-  // Phân bố số vào các cột
-  for (let c = 0; c < 9; c++) {
-    const rowsForCol = [];
-    if (rowColIndices[0].includes(c)) rowsForCol.push(0);
-    if (rowColIndices[1].includes(c)) rowsForCol.push(1);
-    if (rowColIndices[2].includes(c)) rowsForCol.push(2);
-
-    const k = rowsForCol.length;
-    if (k > 0) {
-      // Chọn k số ngẫu nhiên cho cột này
-      const min = c === 0 ? 1 : c * 10;
-      const max = c === 8 ? 90 : (c * 10 + 9);
-      
-      const pool = new Set();
-      while (pool.size < k) {
-        pool.add(Math.floor(Math.random() * (max - min + 1)) + min);
+  for (let ticket = 0; ticket < 3; ticket++) {
+    const rowColIndices = [[], [], []];
+    for (let r = 0; r < 3; r++) {
+      // Chỉ chọn các cột còn số
+      const available = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter(c => colPools[c].length > 0);
+      for (let i = available.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [available[i], available[j]] = [available[j], available[i]];
       }
-      // Sắp xếp tăng dần từ trên xuống dưới
-      const sortedNums = Array.from(pool).sort((a, b) => a - b);
-      
-      rowsForCol.forEach((r, idx) => {
-        board[r * cols + c] = sortedNums[idx];
-      });
+      rowColIndices[r] = available.slice(0, 5);
+    }
+
+    const offset = ticket * 27;
+    for (let c = 0; c < 9; c++) {
+      const rowsForCol = [];
+      if (rowColIndices[0].includes(c)) rowsForCol.push(0);
+      if (rowColIndices[1].includes(c)) rowsForCol.push(1);
+      if (rowColIndices[2].includes(c)) rowsForCol.push(2);
+
+      const k = rowsForCol.length;
+      if (k > 0) {
+        const nums = [];
+        for (let i = 0; i < k; i++) {
+          nums.push(colPools[c].pop());
+        }
+        nums.sort((a, b) => a - b);
+        rowsForCol.forEach((r, idx) => {
+          board[offset + r * 9 + c] = nums[idx];
+        });
+      }
     }
   }
 
