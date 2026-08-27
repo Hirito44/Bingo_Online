@@ -151,6 +151,7 @@ export const WaitingRoom = ({ roomId, roomData, myPlayerId, onStart, onBack, set
                   rows={rows} 
                   cols={cols}
                   theme={roomData?.settings?.theme || 'classic'}
+                  mode={roomData?.settings?.gameMode || 'classic'}
                 />
               ) : (
                 <div style={{textAlign: 'center', padding: '2rem'}}>Đang tải bảng...</div>

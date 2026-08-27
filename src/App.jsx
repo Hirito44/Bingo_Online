@@ -373,6 +373,7 @@ function App() {
                   rows={roomData.settings.rows} 
                   cols={roomData.settings.cols}
                   theme={roomData.settings.theme || 'classic'}
+                  mode={roomData.settings.gameMode || 'classic'}
                   onCellSelect={handleCellSelect}
                   winningLines={winningData.winningLines}
                   latestCalledNumber={calledNumbers[0]}

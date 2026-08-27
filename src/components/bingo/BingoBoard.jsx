@@ -2,7 +2,7 @@ import React from 'react';
 import { BingoCell } from './BingoCell';
 import './BingoBoard.css';
 
-export const BingoBoard = ({ board, rows, cols, theme = 'classic', onCellSelect, winningLines = [], latestCalledNumber }) => {
+export const BingoBoard = ({ board, rows, cols, theme = 'classic', mode = 'classic', onCellSelect, winningLines = [], latestCalledNumber }) => {
   
   // Helper to determine which strike types apply to a given cell id
   const getStrikeTypes = (cellId) => {
@@ -17,7 +17,7 @@ export const BingoBoard = ({ board, rows, cols, theme = 'classic', onCellSelect,
 
   return (
     <div 
-      className={`bingo-board theme-${theme}`}
+      className={`bingo-board theme-${theme} ${mode === 'standard' ? 'mode-standard' : ''}`}
       style={{
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`
